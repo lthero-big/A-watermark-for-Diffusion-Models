@@ -8,10 +8,11 @@
  
 
 - [x] 支持Stable Diffusion v1-4 , v2-0 ,v2-1 :tada:
-
 - [x] 支持**命令行SD**和**可视化SD-webui** :+1:
 
-  
+-----------
+
+
 
 
 ## 【命令行】使用教程
@@ -110,12 +111,14 @@ Bit accuracy:  0.8515625
 
 ## 【可视化】Stable Diffusion-WebUI
 
+### 脚本安装
+
 1. 把本项目`scripts`目录下的GS_watermark_insert.py放在Stable Diffusion-WebUI的`scripts`目录下面
 2. 随后，**重启webui**，在**txt2img和img2img**的最下方脚本中找到“**GS_watermark_insert**”
 
 ![image-20240303215705020](https://cdn.lthero.cn/post_images/course/ML/image-20240303215705020.png)
 
-### 脚本提供的三个输入
+### 脚本提供的三个参数
 
 * Key, Nonce, Message
 * Key需要**32字节十六进制输入**，Nonce需要**16字节十六进制输入**
