@@ -8,7 +8,8 @@
 
 
 
-## 使用教程
+
+## 【命令行】使用教程
 
 ### 生成水印图像
 
@@ -98,13 +99,34 @@ Bit accuracy:  0.8515625
 
 
 
+## 【可视化】Stable Diffusion-WebUI
+
+1. 把本项目`scripts`目录下的GS_watermark_insert.py放在Stable Diffusion-WebUI的`scripts`目录下面
+2. 随后，**重启webui**，在**txt2img和img2img**的最下方脚本中找到“**GS_watermark_insert**”
+
+![image-20240303215705020](https://cdn.lthero.cn/post_images/course/ML/image-20240303215705020.png)
+
+### 脚本提供的三个输入
+
+* Key, Nonce, Message
+* Key需要**32字节十六进制输入**，Nonce需要**16字节十六进制输入**
+  * 可以仅填写Key，将Nonce留空
+  * Key和Nonce都可以留空，随后，可在Stable Diffusion-WebUI的根目录下，找到info_data.txt记录着Key和Nonce
+* Message内容不超过32字节（可以输入字符串）
+
 
 
 
 
 ------
 
-## ChaCha20加密相关
+
+
+## 附录
+
+
+
+### ChaCha20加密相关
 
 ChaCha20是一种流加密算法，由Daniel J. Bernstein设计。它是Salsa20算法的改进版，提供了高速、高安全性的加密能力。ChaCha20在多个安全协议和标准中被采用，包括用于TLS和SSH。下面是ChaCha20加密和解密的基本方法介绍：
 
