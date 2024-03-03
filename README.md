@@ -53,7 +53,7 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 
  
 
-> [!Note]
+> [!important]
 >
 > * key_hex和nonce_hex可以**都不输入**，则自动生成随机32字节的key_hex和随机16字节nonce_hex
 > * message也可以留空，会自动生成256bit（32字节）的随机内容
@@ -83,33 +83,36 @@ python extricate.py --orig_image_path "path_to_image.png" \
 
 #### 参数解释
 
-* orig_image_path：水印图像路径
-* key_hex：同上，被保留在info_data.txt中
-* nonce_hex：同上，被保留在info_data.txt中
-* original_message_hex：输入的消息会被转成十六进制，被保留在info_data.txt中
+* orig_image_path：水印图像的路径
+* key_hex：使用**十六进制作为输入**，被保留在info_data.txt中
+* nonce_hex：使用**十六进制作为输入**，被保留在info_data.txt中
+* original_message_hex：输入的消息会**被转成十六进制**，被保留在info_data.txt中
 * num_inference_steps：推理步数，默认为100步，适当上调可以提高比特正确率
 
+> [!caution]
+>
+> original_message_hex一定要输入十六进制的格式，严格按info_data.txt中输入即可
 
+ 
 
-运行extricate.py后，会输出：
-
-1. 原消息的二进制表示
-2. 提取消息的二进制表示
-3. 两者的位比特正确率
+运行extricate.py后，会输出如下内容
 
 ```shell
-Recovered message :
+原消息的二进制表示
 01101100011001000110000011100111010
  
-Original message:
+提取消息的二进制表示
 01101100011101000110100001100101011
  
+两者的位比特正确率
 Bit accuracy:  0.8515625
 ```
 
 
 
-## 【可视化】Stable Diffusion-WebUI
+## 【可视化】使用教程
+
+> 可视化是基于[Stable Diffusion-WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)项目，本项目以脚本的形式实现功能
 
 ### 脚本安装
 
@@ -126,9 +129,14 @@ Bit accuracy:  0.8515625
   * Key和Nonce都可以留空
 * Message内容不超过32字节（可以输入字符串）
 
-> [!Note]
+> [!important]
 >
 > 可在Stable Diffusion-WebUI的根目录下，找到info_data.txt记录着Key，Nonce，Message
+
+### 图像生成
+
+* 填写完成脚本提供的三个参数后，按正常的习惯生成图像即可，图像会自带水印
+* 水印的提取方式同上述的命令行教程
 
 
 
