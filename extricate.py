@@ -81,7 +81,7 @@ def recover_exactracted_message(reversed_latents, key, nonce, l=1):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='exactract watermark')
     parser.add_argument('--model_id', default='stabilityai/stable-diffusion-2-1-base')
-    parser.add_argument('--orig_image_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/samples/00081.png")
+    parser.add_argument('--orig_image_path', default="output/00378.png")
     parser.add_argument('--key_hex', default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7")
     # nonce_hex=14192f43863f6bad1bf54b7832697389
     parser.add_argument('--nonce_hex', default="")
