@@ -30,15 +30,18 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 
 
 
-### 参数解释
+#### 参数解释
 
 * --ckpt：SD的模型文件
 * --config：与SD的模型文件配套的config文件
 * --n_samples: 表示生成的批次，每批次固定生成3张
-* --key_hex：32字节，使用十六进制作为输入，用于将message进行加密（使用ChaCha20加密算法）
-* --nonce_hex：16字节，用于将message进行加密，增强加密性
+* --key_hex：密钥Key（32字节，256位）
+  * 使用十六进制作为输入，用于将message进行加密（使用ChaCha20加密算法）
+  * ChaCha20的核心是一个伪随机函数，它基于输入的密钥Key（256位），一个随机数（nonce，通常是64位或96位），和一个初始的计数器值**生成一个伪随机字节序列**。这个伪随机字节序列然后与明文或密文进行XOR操作，从而实现加密或解密。
+* --nonce_hex：随机数nonce（16字节）
+  * 用于将message进行加密
   * nonce_hex可以不输入，如果不输入，则nonce_hex默认使用key_hex中间16字节
-* --message: 想要嵌入的消息，最大支持256bit（32字节），超过此长度会被截断
+* --message: 嵌入的水印消息，最大支持256bit（32字节），超过此长度会被截断，不足会被补充
 
 > * key_hex和nonce_hex可以都不输入，此时会自动生成随机32字节的key_hex和随机16字节nonce_hex
 > * message也可以留空，会自动生成256bit（32字节）的随机内容
