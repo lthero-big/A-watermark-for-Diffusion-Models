@@ -65,13 +65,15 @@ python extricate.py --orig_image_path "path_to_image.png" \
 
 #### 参数解释
 
-* orig_image_path 图像路径
+* orig_image_path：水印图像路径
 * key_hex：同上，被保留在info_data.txt中
 * nonce_hex：同上，被保留在info_data.txt中
 * original_message_hex：输入的消息会被转成十六进制，被保留在info_data.txt中
 * num_inference_steps：推理步数，默认为100步，适当上调可以提高比特正确率
 
 
+
+运行extricate.py后，会输出原
 
 
 
