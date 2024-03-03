@@ -1,12 +1,17 @@
 # A-watermark-for-Diffusion-Models
 
-
-
-> 将水印消息嵌入在初始噪声矩阵中，最大支持256bit水印消息
+> [!NOTE]
+> 在水印图像无损失情况下，水印消息比特提取**正确率约90%**
 >
-> 在水印图像无损失情况下，水印消息比特提取正确率约85%
+> 无需训练，仅对初始噪声矩阵进行修改（**初始噪声矩阵仍保持高斯分布**）
 
+ 
 
+- [x] 支持Stable Diffusion v1-4 , v2-0 ,v2-1 :tada:
+
+- [x] 支持**命令行SD**和**可视化SD-webui** :+1:
+
+  
 
 
 ## 【命令行】使用教程
@@ -29,25 +34,29 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 --message "lthero"
 ```
 
+ 
+
 
 
 #### 参数解释
 
-* --ckpt：SD的模型文件
-* --config：与SD的模型文件配套的config文件
+* --ckpt：Stable Diffusion的[模型文件](https://huggingface.co/stabilityai/stable-diffusion-2-1/tree/main)
+* --config：Stable Diffusion[配套的config文件](https://github.com/Stability-AI/stablediffusion/tree/main/configs/stable-diffusion)
 * --n_samples: 表示生成的批次，每批次固定生成3张
-* --key_hex：密钥Key（32字节，256位）
-  * 使用十六进制作为输入，用于将message进行加密（使用ChaCha20加密算法）
-  * ChaCha20的核心是一个伪随机函数，它基于输入的密钥Key（256位），一个随机数（nonce，通常是64位或96位），和一个初始的计数器值**生成一个伪随机字节序列**。这个伪随机字节序列然后与明文或密文进行XOR操作，从而实现加密或解密。
+* --key_hex：密钥Key（32字节）
+  * 使用**十六进制作为输入**，用于将message进行加密（使用**ChaCha20加密算法**）
 * --nonce_hex：随机数nonce（16字节）
-  * 用于将message进行加密
-  * nonce_hex可以不输入，如果不输入，则nonce_hex默认使用key_hex中间16字节
-* --message: 嵌入的水印消息，最大支持256bit（32字节），超过此长度会被截断，不足会被补充
+  * 使用**十六进制作为输入**，用于将message进行加密
+  * nonce_hex可以不输入，如果不输入，则nonce_hex**默认使用key_hex中间16字节**
+* --message: 嵌入的水印消息，最大支持256bit（32字节），超过此长度会被截断，不足会补充
 
-> * key_hex和nonce_hex可以都不输入，此时会自动生成随机32字节的key_hex和随机16字节nonce_hex
+ 
+
+> [!Note]
+>
+> * key_hex和nonce_hex可以**都不输入**，则自动生成随机32字节的key_hex和随机16字节nonce_hex
 > * message也可以留空，会自动生成256bit（32字节）的随机内容
-
-以上参数都会被保存在**info_data.txt**中（在Stable Diffusion项目的根目录下）
+> * 以上参数都会被保存在**info_data.txt**中（在Stable Diffusion项目的根目录下）
 
 
 
@@ -111,10 +120,12 @@ Bit accuracy:  0.8515625
 * Key, Nonce, Message
 * Key需要**32字节十六进制输入**，Nonce需要**16字节十六进制输入**
   * 可以仅填写Key，将Nonce留空
-  * Key和Nonce都可以留空，随后，可在Stable Diffusion-WebUI的根目录下，找到info_data.txt记录着Key和Nonce
+  * Key和Nonce都可以留空
 * Message内容不超过32字节（可以输入字符串）
 
-
+> [!Note]
+>
+> 可在Stable Diffusion-WebUI的根目录下，找到info_data.txt记录着Key，Nonce，Message
 
 
 
@@ -124,11 +135,9 @@ Bit accuracy:  0.8515625
 
 ## 附录
 
-
-
 ### ChaCha20加密相关
 
-ChaCha20是一种流加密算法，由Daniel J. Bernstein设计。它是Salsa20算法的改进版，提供了高速、高安全性的加密能力。ChaCha20在多个安全协议和标准中被采用，包括用于TLS和SSH。下面是ChaCha20加密和解密的基本方法介绍：
+ChaCha20的核心是一个伪随机函数，它基于输入的密钥Key（256位），一个随机数（nonce，通常是64位或96位），和一个初始的计数器值**生成一个伪随机字节序列**。这个伪随机字节序列然后与明文或密文进行XOR操作，从而实现加密或解密。
 
 ### 加密和解密过程
 

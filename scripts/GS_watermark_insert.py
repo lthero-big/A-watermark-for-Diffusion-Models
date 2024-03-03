@@ -84,19 +84,13 @@ def init_gs_Z_s_T():
         f.write(f'message: {k.hex()}\n')
         f.write('----------------------\n')
 
-    print("!!!!!!!!!Finished!!!!!!!!!!!!")
     return Z_s_T_array
 
 
 def advanced_creator(shape, seeds, subseeds=None, subseed_strength=0.0, seed_resize_from_h=0, seed_resize_from_w=0,
                      p=None):
     global global_message, global_key, global_nonce
-    # print("===================advanced_creator2======================")
-    # noises = torch.tensor(init_gs_Z_s_T()).float()
-    # return torch.stack(torch.tensor(init_gs_Z_s_T()).float()).to(shared.device)
     noise = torch.tensor(init_gs_Z_s_T()).float().to(shared.device)
-    # Add a new dimension to simulate a batch.
-    # .unsqueeze(0) adds a new dimension at position 0, making it a batch of 1.
     noise_with_new_dim = noise.unsqueeze(0)
     return noise_with_new_dim
 
@@ -111,12 +105,10 @@ class Script(scripts.Script):
                                value="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7")
         nonce_input = gr.Textbox(label='Input Nonce Here', value="05072fd1c2265f6f2e2a4080a2bfbdd8")
         message_input = gr.Textbox(label='Input Message Here',
-                                   value="6c746865726f6c746865726f6c746865726f6c746865726f6c746865726f6c74")
+                                   value="")
         return [message_input, key_input, nonce_input]
 
     def run(self, p, message, key, nonce):
-
-        print("===================111_run======================")
         real_creator = processing.create_random_tensors
         try:
             processing.create_random_tensors = advanced_creator
