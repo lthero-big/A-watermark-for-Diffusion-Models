@@ -29,7 +29,7 @@ def exactract_latents(args):
     # assume at the detection time, the original prompt is unknown，原论文中使用的就是空prompt
     text_embeddings = pipe.get_text_embedding(tester_prompt)
     # 格式PIL.Image.Image
-    orig_image = Image.open(args.orig_image_path)
+    orig_image = Image.open(args.single_image_path)
     # 
     img_w = transform_img(orig_image).unsqueeze(0).to(torch.float16).to(device)
     # 
@@ -96,20 +96,20 @@ def get_result_for_one_image(args):
     extracted_message_bin = recover_exactracted_message(reversed_latents, args.key, args.nonce, args.l)
     # 
     original_message_bin, bit_accuracy = calculate_bit_accuracy(args.original_message_hex, extracted_message_bin)
-    # print(f"{os.path.basename(args.orig_image_path)}: Original Message: {original_message_bin} \n Extracted Message: {extracted_message_bin}\n Bit Accuracy: {bit_accuracy}\n")
-    print(f"{os.path.basename(args.orig_image_path)}, Bit Accuracy,{bit_accuracy}\n")
+    # print(f"{os.path.basename(args.single_image_path)}: Original Message: {original_message_bin} \n Extracted Message: {extracted_message_bin}\n Bit Accuracy: {bit_accuracy}\n")
+    print(f"{os.path.basename(args.single_image_path)}, Bit Accuracy,{bit_accuracy}\n")
     return original_message_bin,extracted_message_bin,bit_accuracy
 
 def process_directory(args):
     # Get all image files in the directory
-    image_files = glob.glob(os.path.join(args.directory, "*.png")) + glob.glob(os.path.join(args.directory, "*.jpg"))
+    image_files = glob.glob(os.path.join(args.image_directory_path, "*.png")) + glob.glob(os.path.join(args.image_directory_path, "*.jpg"))
 
-    with open(args.directory+"/"+"result.txt", "a") as result_file:
+    with open(args.image_directory_path+"/"+"result.txt", "a") as result_file:
         result_file.write("========================================Batch Info==========================================================\n")
         result_file.write(f"key_hex:{args.key_hex} \nnonce_hex:{args.nonce_hex} \noriginal_message_hex:{args.original_message_hex} \nnum_inference_steps:{args.num_inference_steps}\n")
         result_file.write("========================================Batch Start==========================================================\n")
         for image_path in tqdm(image_files):
-            args.orig_image_path = image_path
+            args.single_image_path = image_path
             try:
                 # Process each image
                 result=get_result_for_one_image(args)
@@ -146,10 +146,10 @@ if __name__ == "__main__":
         args.nonce = bytes.fromhex(args.key_hex[16:48])
     
     # 批处理
-    if args.directory!="":
+    if args.image_directory_path!="":
         process_directory(args)
     # 单次处理
-    elif args.orig_image_path!="":
+    elif args.single_image_path!="":
         get_result_for_one_image(args)
     else:
         print("Please set the argument 'image_directory_path' or 'single_image_path'")
