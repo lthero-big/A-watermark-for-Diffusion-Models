@@ -118,6 +118,8 @@ class InversableStableDiffusionPipeline(ModifiedStableDiffusionPipeline):
         # here `guidance_scale` is defined analog to the guidance weight `w` of equation (2)
         # of the Imagen paper: https://arxiv.org/pdf/2205.11487.pdf . `guidance_scale = 1`
         # corresponds to doing no classifier free guidance.
+        # 在生成图像中，使用guidance_scale=7.5，此时do_classifier_free_guidance是True
+        # 在而逆向过程中，不使用CFG，do_classifier_free_guidance=False
         do_classifier_free_guidance = guidance_scale > 1.0
         # set timesteps
         self.scheduler.set_timesteps(num_inference_steps)
