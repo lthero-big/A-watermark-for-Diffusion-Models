@@ -123,10 +123,12 @@ def process_directory(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Extract watermark from a image')
     parser.add_argument('--model_id', default='stabilityai/stable-diffusion-2-1-base')
-    parser.add_argument('--directory', help='Directory containing images to process', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t")
-    parser.add_argument('--orig_image_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/samples/00595_v2_1.png")
+    # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t
+    parser.add_argument('--image_directory_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t", help='The path of directory containing images to process')
+    # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/samples/00595_v2_1.png
+    parser.add_argument('--single_image_path', default="")
     # , required=True
-    parser.add_argument('--key_hex', help='Hexadecimal key used for encryption', default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7")
+    parser.add_argument('--key_hex', default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7", help='Hexadecimal key used for encryption')
     # nonce_hex=14192f43863f6bad1bf54b7832697389
     parser.add_argument('--nonce_hex', default="05072fd1c2265f6f2e2a4080a2bfbdd8", help='Hexadecimal nonce used for encryption, if empty will use part of the key')
     parser.add_argument('--original_message_hex', default="6c746865726f0000000000000000000000000000000000000000000000000000", help='Hexadecimal representation of the original message for accuracy calculation')
@@ -144,10 +146,13 @@ if __name__ == "__main__":
         args.nonce = bytes.fromhex(args.key_hex[16:48])
     
     # 批处理
-    process_directory(args)
-    
+    if args.directory!="":
+        process_directory(args)
     # 单次处理
-    # get_result_for_one_image(args)
+    elif args.orig_image_path!="":
+        get_result_for_one_image(args)
+    else:
+        print("Please set the argument 'image_directory_path' or 'single_image_path'")
 
 
     
