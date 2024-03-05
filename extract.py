@@ -19,6 +19,7 @@ from typing import Union, Tuple, Optional
 from torchvision import transforms as tvt
 
 
+# credit to: https://github.com/shaibagon/diffusers_ddim_inversion
 # Used for exactract_latents_DDIM_inversion
 def load_image(imgname: str, target_size: Optional[Union[int, Tuple[int, int]]] = None) -> torch.Tensor:
     pil_img = Image.open(imgname).convert('RGB')
@@ -58,6 +59,7 @@ def  exactract_latents_DDIM_inversion(args) -> torch.Tensor:
                           num_inference_steps=args.num_inference_steps, latents=latents)
     return inv_latents.cpu()
 
+#  credit to: https://github.com/YuxinWenRick/tree-ring-watermark 
 
 def exactract_latents(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -146,7 +148,7 @@ def get_result_for_one_image(args):
     extracted_message_bin = recover_exactracted_message(reversed_latents, args.key, args.nonce, args.l)
     # 
     original_message_bin, bit_accuracy = calculate_bit_accuracy(args.original_message_hex, extracted_message_bin)
-    # print(f"{os.path.basename(args.single_image_path)}: Original Message: {original_message_bin} \n Extracted Message: {extracted_message_bin}\n Bit Accuracy: {bit_accuracy}\n")
+    # print(f"{os.path.basename(args.single_image_path)}\nOriginal Message: {original_message_bin} \nExtracted Message: {extracted_message_bin}\nBit Accuracy: {bit_accuracy}\n")
     print(f"{os.path.basename(args.single_image_path)}, Bit Accuracy,{bit_accuracy}\n")
     return original_message_bin,extracted_message_bin,bit_accuracy
 
@@ -155,9 +157,9 @@ def process_directory(args):
     image_files = glob.glob(os.path.join(args.image_directory_path, "*.png")) + glob.glob(os.path.join(args.image_directory_path, "*.jpg"))
 
     with open(args.image_directory_path+"/"+"result.txt", "a") as result_file:
-        result_file.write("========================================Batch Info==========================================================\n")
+        result_file.write("=" * 40 +"Batch Info"+"=" * 40+"\n")
         result_file.write(f"key_hex:{args.key_hex} \nnonce_hex:{args.nonce_hex} \noriginal_message_hex:{args.original_message_hex} \nnum_inference_steps:{args.num_inference_steps}\n")
-        result_file.write("========================================Batch Start==========================================================\n")
+        result_file.write("=" * 40 +"Batch Start"+"=" * 40+"\n")
         for image_path in tqdm(image_files):
             args.single_image_path = image_path
             try:
@@ -168,7 +170,7 @@ def process_directory(args):
             except Exception as e:
                 print(f"Error processing {image_path}: {e}\n")
                 result_file.write(f"Error processing {image_path}: {e}\n")
-        result_file.write("========================================Batch End==========================================================\n\n")
+        result_file.write("=" * 40 +"Batch End"+"=" * 40+"\n\n")
     
 
 if __name__ == "__main__":
@@ -178,14 +180,16 @@ if __name__ == "__main__":
     # stabilityai/stable-diffusion-2-1-base
     parser.add_argument('--model_id', default='stabilityai/stable-diffusion-2-1-base')
     # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t
-    parser.add_argument('--image_directory_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t", help='The path of directory containing images to process')
+    parser.add_argument('--image_directory_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t", 
+    help='The path of directory containing images to process')
     # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/need2test/v2-1_512_00642-1_DDIM_50s.png
     parser.add_argument('--single_image_path', default="")
     # , required=True
     parser.add_argument('--key_hex', default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7", help='Hexadecimal key used for encryption')
     # nonce_hex=14192f43863f6bad1bf54b7832697389
     parser.add_argument('--nonce_hex', default="05072fd1c2265f6f2e2a4080a2bfbdd8", help='Hexadecimal nonce used for encryption, if empty will use part of the key')
-    parser.add_argument('--original_message_hex', default="6c746865726f0000000000000000000000000000000000000000000000000000", help='Hexadecimal representation of the original message for accuracy calculation')
+    parser.add_argument('--original_message_hex', default="6c746865726f0000000000000000000000000000000000000000000000000000", 
+    help='Hexadecimal representation of the original message for accuracy calculation')
     parser.add_argument('--num_inference_steps', default=50, type=int, help='Number of inference steps for the model')
     parser.add_argument('--scheduler', default="DPMs", help="Choose a scheduler between 'DPMs' and 'DDIM' to inverse the image")
     
