@@ -14,13 +14,25 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import numpy as np
 from scipy.stats import norm
+from datetime import datetime
 
 from typing import Union, Tuple, Optional
 from torchvision import transforms as tvt
 
 
 # credit to: https://github.com/shaibagon/diffusers_ddim_inversion
+# credit to: https://github.com/cccntu/efficient-prompt-to-prompt/blob/main/ddim-inversion.ipynb
+# credit to: https://github.com/google/prompt-to-prompt/blob/main/null_text_w_ptp.ipynb
 # Used for exactract_latents_DDIM_inversion
+
+def disabled_safety_checker(images, clip_input):
+    if len(images.shape)==4:
+        num_images = images.shape[0]
+        return images, [False]*num_images
+    else:
+        return images, False
+
+
 def load_image(imgname: str, target_size: Optional[Union[int, Tuple[int, int]]] = None) -> torch.Tensor:
     pil_img = Image.open(imgname).convert('RGB')
     if target_size is not None:
@@ -38,14 +50,15 @@ def img_to_latents(x: torch.Tensor, vae: AutoencoderKL):
 
 
 @torch.no_grad()
-def  exactract_latents_DDIM_inversion(args) -> torch.Tensor:
+def exactract_latents_DDIM_inversion(args) -> torch.Tensor:
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     dtype = torch.float16
 
     inverse_scheduler = DDIMInverseScheduler.from_pretrained(args.model_id, subfolder='scheduler')
     pipe = StableDiffusionPipeline.from_pretrained(args.model_id,
                                                    scheduler=inverse_scheduler,
-                                                   safety_checker=None,
+                                                #    safety_checker=None,
+                                                   safety_checker = disabled_safety_checker,
                                                    torch_dtype=dtype)
     pipe.to(device)
     vae = pipe.vae
@@ -61,20 +74,53 @@ def  exactract_latents_DDIM_inversion(args) -> torch.Tensor:
 
 #  credit to: https://github.com/YuxinWenRick/tree-ring-watermark 
 
+
+def exactract_latents_DDIM_inversion_official(args):
+    import torch
+    from diffusers import DDIMScheduler, DDIMInverseScheduler, StableDiffusionDiffEditPipeline
+
+    pipeline = StableDiffusionDiffEditPipeline.from_pretrained(
+        args.model_id,
+        torch_dtype=torch.float16,
+        safety_checker=None,
+    )
+    pipeline.scheduler = DDIMScheduler.from_config(pipeline.scheduler.config)
+    pipeline.inverse_scheduler = DDIMInverseScheduler.from_config(pipeline.scheduler.config)
+    pipeline.enable_model_cpu_offload()
+    pipeline.enable_vae_slicing()
+    generator = torch.manual_seed(0)
+
+    from diffusers.utils import load_image
+
+    # raw_image = load_image(args.single_image_path).convert("RGB").resize((768, 768))
+    raw_image = load_image(args.single_image_path).convert("RGB")
+    source_prompt = ""
+    target_prompt = ""
+    inv_latents = pipeline.invert(prompt=source_prompt, image=raw_image, generator=generator).latents
+    return inv_latents
+
 def exactract_latents(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # 
     if args.scheduler=="DPMs":
         scheduler = DPMSolverMultistepScheduler.from_pretrained(args.model_id, subfolder='scheduler')
     elif args.scheduler=="DDIM":
-        scheduler = DDIMInverseScheduler.from_pretrained(args.model_id, subfolder='scheduler')
+        # doesn't work
+        # scheduler = DDIMInverseScheduler.from_pretrained(args.model_id, subfolder='scheduler')
+
+        # not official but it works
+        return exactract_latents_DDIM_inversion(args)
+        
+        # official's way doesn't work
+        # return exactract_latents_DDIM_inversion_official(args)
     
     pipe = InversableStableDiffusionPipeline.from_pretrained(
         args.model_id,
         scheduler=scheduler,
         torch_dtype=torch.float16,
-        revision='fp16',
-        safety_checker=None,
+        variant='fp16',
+        # revision='fp16',
+        safety_checker = disabled_safety_checker
         )
     pipe = pipe.to(device)
     tester_prompt = ''
@@ -158,7 +204,13 @@ def process_directory(args):
 
     with open(args.image_directory_path+"/"+"result.txt", "a") as result_file:
         result_file.write("=" * 40 +"Batch Info"+"=" * 40+"\n")
-        result_file.write(f"key_hex:{args.key_hex} \nnonce_hex:{args.nonce_hex} \noriginal_message_hex:{args.original_message_hex} \nnum_inference_steps:{args.num_inference_steps}\n")
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        result_file.write(f"Time: {current_time}\n")
+        result_file.write(f"key_hex:{args.key_hex}\n")
+        result_file.write(f"nonce_hex:{args.nonce_hex} \n")
+        result_file.write(f"original_message_hex:{args.original_message_hex} \n")
+        result_file.write(f"num_inference_steps:{args.num_inference_steps}\n")
+        result_file.write(f"scheduler:{args.scheduler}\n")
         result_file.write("=" * 40 +"Batch Start"+"=" * 40+"\n")
         for image_path in tqdm(image_files):
             args.single_image_path = image_path
@@ -176,8 +228,8 @@ def process_directory(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Extract watermark from a image')
     # 模型选择
-    # stabilityai/stable-diffusion-2-1
-    # stabilityai/stable-diffusion-2-1-base
+    # stabilityai/stable-diffusion-2-1 is for 768x768
+    # stabilityai/stable-diffusion-2-1-base is for 512x512
     parser.add_argument('--model_id', default='stabilityai/stable-diffusion-2-1-base')
     # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t
     parser.add_argument('--image_directory_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t", 
@@ -190,8 +242,8 @@ if __name__ == "__main__":
     parser.add_argument('--nonce_hex', default="05072fd1c2265f6f2e2a4080a2bfbdd8", help='Hexadecimal nonce used for encryption, if empty will use part of the key')
     parser.add_argument('--original_message_hex', default="6c746865726f0000000000000000000000000000000000000000000000000000", 
     help='Hexadecimal representation of the original message for accuracy calculation')
-    parser.add_argument('--num_inference_steps', default=50, type=int, help='Number of inference steps for the model')
-    parser.add_argument('--scheduler', default="DPMs", help="Choose a scheduler between 'DPMs' and 'DDIM' to inverse the image")
+    parser.add_argument('--num_inference_steps', default=100, type=int, help='Number of inference steps for the model')
+    parser.add_argument('--scheduler', default="DDIM", help="Choose a scheduler between 'DPMs' and 'DDIM' to inverse the image")
     
     parser.add_argument('--l', default=1, type=int, help="The size of slide windows for m")
     args = parser.parse_args()
