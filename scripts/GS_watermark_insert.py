@@ -78,7 +78,10 @@ def init_gs_Z_s_T():
         index += 1
 
     # 将数据写入文件
+    # Get the current time
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(f'info_data.txt', 'a') as f:
+        f.write(f"Time: {current_time}\n")
         f.write(f'key: {key.hex()}\n')
         f.write(f'nonce: {nonce.hex()}\n')
         f.write(f'message: {k.hex()}\n')
@@ -109,6 +112,7 @@ class Script(scripts.Script):
         return [message_input, key_input, nonce_input]
 
     def run(self, p, message, key, nonce):
+        print("===================run======================")
         real_creator = processing.create_random_tensors
         try:
             processing.create_random_tensors = advanced_creator
