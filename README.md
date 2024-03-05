@@ -33,6 +33,7 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 --key_hex "5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7" \
 --nonce_hex "" \
 --message "lthero"
+--scheduler "DPMs"
 ```
 
  
@@ -50,6 +51,7 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
   * 使用**十六进制作为输入**，用于将message进行加密
   * nonce_hex可以不输入，如果不输入，则nonce_hex**默认使用key_hex中间16字节**
 * --message: 嵌入的水印消息，最大支持256bit（32字节），超过此长度会被截断，不足会补充
+* --scheduler: 选择采样器，有"DPMs"和"DDIM"两种选择，原论文使用DDIM，但DDIM还没测试成功
 
  
 
