@@ -33,7 +33,6 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 --key_hex "5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7" \
 --nonce_hex "" \
 --message "lthero"
---scheduler "DPMs"
 ```
 
  
@@ -43,15 +42,21 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 #### 参数解释
 
 * --ckpt：Stable Diffusion的[模型文件](https://huggingface.co/stabilityai/stable-diffusion-2-1/tree/main)
+
 * --config：Stable Diffusion[配套的config文件](https://github.com/Stability-AI/stablediffusion/tree/main/configs/stable-diffusion)
+
 * --n_samples: 表示生成的批次，每批次固定生成3张
+
 * --key_hex：密钥Key（32字节）
   * 使用**十六进制作为输入**，用于将message进行加密（使用**ChaCha20加密算法**）
+  
 * --nonce_hex：随机数nonce（16字节）
   * 使用**十六进制作为输入**，用于将message进行加密
   * nonce_hex可以不输入，如果不输入，则nonce_hex**默认使用key_hex中间16字节**
+  
 * --message: 嵌入的水印消息，最大支持256bit（32字节），超过此长度会被截断，不足会补充
-* --scheduler: 选择采样器，有"DPMs"和"DDIM"两种选择，原论文使用DDIM，但DDIM还没测试成功
+
+  
 
  
 
@@ -71,16 +76,19 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 
 #### 方式1
 
-1. 在extricate.py修改里面的参数
+1. 在`extricate.py`修改里面的参数
 2. 再用命令`python extricate.py`运行extricate.py即可，
 
 #### 方式2
+
+在命令中传入参数
 
 ```shell
 python extricate.py --orig_image_path "path_to_image.png" \
 --key_hex "xxxxxxxxxx" \
 --original_message_hex "xxxxxxxxxxxxx" \
---num_inference_steps 100
+--num_inference_steps 50
+--scheduler "DPMs"
 ```
 
 #### 参数解释
@@ -89,7 +97,8 @@ python extricate.py --orig_image_path "path_to_image.png" \
 * key_hex：使用**十六进制作为输入**，被保留在info_data.txt中
 * nonce_hex：使用**十六进制作为输入**，被保留在info_data.txt中
 * original_message_hex：输入的消息会**被转成十六进制**，被保留在info_data.txt中
-* num_inference_steps：推理步数，默认为100步，适当上调可以提高比特正确率
+* num_inference_steps：推理步数，默认为50步，适当上调可以提高比特正确率
+* --scheduler: 选择采样器，有"DPMs"和"DDIM"两种选择，原论文使用了DDIM，但DDIM还没测试成功
 
 > [!caution]
 >
