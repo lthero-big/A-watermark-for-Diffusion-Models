@@ -254,11 +254,9 @@ from cryptography.hazmat.backends import default_backend
 import numpy as np
 from scipy.stats import norm
 import os
+from datetime import datetime
 
 def init_gs_Z_s_T(opt,message=""):
-    # Reed-Solomon编码器初始化，指定能够纠正的错误数目
-    rs = RSCodec(10)  # 假设我们希望能够至少纠正10个错误字节，对于10个错误字节，我们需要分配20字节用于纠错数据。用户最多只能输入12字节
-
     if message:
         # 将消息转换为字节串
         message_bytes = message.encode()
@@ -321,13 +319,15 @@ def init_gs_Z_s_T(opt,message=""):
         Z_s_T_array[index // (64*64), (index // 64) % 64, index % 64] = z_s_T
         index+=1
 
-    # 将数据写入文件
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(f'info_data.txt', 'a') as f:
+        f.write(f"Time: {current_time}\n")
         f.write(f'key: {key.hex()}\n')
         f.write(f'nonce: {nonce.hex()}\n')
         f.write(f'message: {k.hex()}\n')
         f.write('----------------------\n')
     return Z_s_T_array
+
 
 
 def main(opt):

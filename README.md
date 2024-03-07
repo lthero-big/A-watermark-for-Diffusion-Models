@@ -91,7 +91,11 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 1. 把本项目`scripts`目录下的`GS_watermark_insert.py`文件放在Stable Diffusion-WebUI的`scripts`目录下面
 2. 随后，**重启webui**，在**txt2img和img2img**栏目最下方的脚本选项中可以找到“**GS_watermark_insert**”
 
-![image-20240303215705020](https://cdn.lthero.cn/post_images/course/ML/image-20240303215705020.png)
+![image-script in webui](image-script_in_webui.png)
+
+
+
+
 
 ### 脚本提供的三个参数
 

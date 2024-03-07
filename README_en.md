@@ -16,11 +16,9 @@
 - [x] **100% bit accurate** of extracted message under lossless conditions for watermarked images. :tada:
 - [x] Exceptional robustness against various types of high-intensity distortion attacks. E.g. an average bit accuracy rate of 90% with **JPEG compression QF=10**. :+1:
 - [x] Compatibility with **different versions of Stable Diffusion**: v1-4, v2-0, v2-1. :tada:
-- [x] Supports both **command-line SD** and the **visual interface SD-webui**. :+1:
-- [x] **No additional training required**. Merely modifying the initial noise with nearly noimpact on image quality. :sparkles:
+- [x] Both **command-line SD** and **script for SD-webui (More recommended)** are supported to use. :+1:
+- [x] **No additional training required**. Merely modifying the initial noise with nearly no impact on image quality. :sparkles:
 - [x] **Plug-and-play** :heavy_check_mark:
-
-
 
 
 
@@ -75,7 +73,7 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 
 -----------
 
-## Tutorial for SD-WebUI
+## [Recommended]Tutorial for SD-WebUI
 
 > This work implement watermark embedding functionality in the form of a script based on the [Stable Diffusion-WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui) project
 
@@ -85,7 +83,7 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 2. After you `restart webui`, you will find the script options at the bottom of the **txt2img and img2img** sections 
 3. Click the script options then you can use "**GS_watermark_insert**".
 
-![image-20240303215705020](https://cdn.lthero.cn/post_images/course/ML/image-20240303215705020.png)
+![image-script in webui](image-script_in_webui.png)
 
 ### Three Parameters Provided by the Script
 
@@ -168,7 +166,7 @@ python extricate.py \
 After running `extricate.py`, it will output the image name and Bit accuracy:
 
 ```shell
-v2-1_512_00098-3367722000JPEG_QF_75.jpg
+v2-1_512_00098-3367722000JPEG_QF_95.jpg
 Bit accuracy:  1.0
 ```
 
