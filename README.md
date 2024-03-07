@@ -5,15 +5,14 @@
 
  
 
-
-
 ## 特性
 
-- [x] 在**水印图像**无损失情况下，水印消息提取**正确率100%**
+- [x] 在**水印图像**无损失情况下，水印消息提取**正确率100%** :tada:
+- [x] 对于多种不同的高强度失真攻击，拥有极好的鲁棒性；如**JPEG压缩QF=10，平均正确率90%** :+1:
 - [x] 支持Stable Diffusion不同版本：v1-4 , v2-0 ,v2-1 :tada:
 - [x] 支持**命令行SD**和**可视化SD-webui** :+1:
-- [x] 无需额外训练，仅对初始噪声矩阵进行修改，对图像质量几乎无影响
-- [x] 即插即用（plug and play），插件化使用方式
+- [x] 无需额外训练，仅对初始噪声矩阵进行修改，对图像质量几乎无影响 :sparkles:
+- [x] 即插即用（plug and play），插件化使用方式 :heavy_check_mark:
 
 -----------
 
@@ -91,21 +90,28 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 在命令中传入参数
 
 ```shell
-python extricate.py --orig_image_path "path_to_image.png" \
+python extricate.py 
+--single_image_path "path to image"
+--image_directory_path "directory toimage" \
 --key_hex "xxxxxxxxxx" \
 --original_message_hex "xxxxxxxxxxxxx" \
 --num_inference_steps 50
 --scheduler "DDIM"
+--is_traverse_subdirectories 0
 ```
 
 #### 参数解释
 
-* orig_image_path：水印图像的路径
+* single_image_path： **单张处理**，输入**单张待检测图像**的路径，如"/xxx/images/001.png"
+* image_directory_path：**批量处理**，待检测图像的**目录路径**，如"/xxx/images"
+  * 两种方式每次只能选择一种，另一种留空；**如果都不为空，仅按目录路径处理**
+
 * key_hex：使用**十六进制作为输入**，被保留在info_data.txt中
 * nonce_hex：使用**十六进制作为输入**，被保留在info_data.txt中
 * original_message_hex：输入的消息会**被转成十六进制**，被保留在info_data.txt中
-* num_inference_steps：推理步数，默认为**50步**；不建议继续上调，如解码速度慢，可以适当下降到20步
+* num_inference_steps：逆向推理步数，默认为**50步**；不建议继续上调，如解码速度慢，可以适当下降到20步
 * scheduler: 选择采样器，有"DPMs"和"DDIM"两种选择，默认使用DDIM
+* is_traverse_subdirectories: 是否对子目录进行递归提取，设置为0，则仅对目录下的图像处理。设置为0，则仅对目录下的所有子目录中的图像处理（包含子目录的子目录）
 
 > [!caution]
 >
@@ -113,18 +119,20 @@ python extricate.py --orig_image_path "path_to_image.png" \
 
  
 
-运行extricate.py后，会输出如下内容
+运行extricate.py后，会输出图像名与Bit正确率
 
 ```shell
-原消息的二进制表示
-01101100011001000110000011100111010
- 
-提取消息的二进制表示
-01101100011101000110100001100101011
- 
-两者的位比特正确率
-Bit accuracy:  0.8515625
+v2-1_512_00098-3367722000JPEG_QF_75.jpg
+Bit accuracy:  1.0
 ```
+
+> [!note]
+>
+> 如果使用批量处理方式，会在输入的目录中产生一个result.txt文件，记录每张图像的结果
+>
+> 如果使用递归处理方式，image_directory_path下的每个子目录会有result.txt文件，并且image_directory_path下会有result.txt记录着每个子目录中平均Bit正确率
+
+
 
 
 
@@ -149,7 +157,7 @@ Bit accuracy:  0.8515625
 
 > [!important]
 >
-> 可在Stable Diffusion-WebUI的根目录下，找到info_data.txt记录着Key，Nonce，Message
+> 可在Stable Diffusion-WebUI的根目录下，找到info_data.txt，其记录着Key，Nonce，Message
 
 ### 图像生成
 
