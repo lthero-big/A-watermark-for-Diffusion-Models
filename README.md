@@ -1,4 +1,4 @@
-# A-watermark-for-Diffusion-Models
+# A watermark for Diffusion Models
 
 
 
@@ -82,9 +82,9 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 
 
 
-## 【可视化】使用教程
+## 【WebUI】使用教程
 
-> 可视化是基于[Stable Diffusion-WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)项目，本项目以脚本的形式实现嵌入水印的功能
+> 基于[Stable Diffusion-WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)项目，本项目以脚本的形式实现嵌入水印的功能，操作简单
 
 ### 脚本安装
 
@@ -173,49 +173,6 @@ Bit accuracy:  1.0
 
 
 
-
-
-
-------
-
-
-
-## 附录
-
-### ChaCha20加密相关
-
-ChaCha20的核心是一个伪随机函数，它基于输入的密钥Key（256位），一个随机数（nonce，通常是64位或96位），和一个初始的计数器值**生成一个伪随机字节序列**。这个伪随机字节序列然后与明文或密文进行XOR操作，从而实现加密或解密。
-
-### 加密和解密过程
-
-ChaCha20的核心是一个伪随机函数，它基于输入的密钥Key（256位），一个随机数（nonce，通常是64位或96位），和一个初始的计数器值**生成一个伪随机字节序列**。这个伪随机字节序列然后与明文或密文进行XOR操作，从而实现加密或解密。
-
-1. **初始化状态**：ChaCha20的状态是一个16个32位字（words）的数组，它包括：
-   - 常数值（4个字）
-   - 密钥**Key**（8个字，256位）
-   - 计数器（1个字，用于确保每个块的唯一性）
-   - 随机数**nonce**（3个字，96位，或2个字，64位）
-
-2. **伪随机字节序列生成**：状态数组经过多轮（通常是20轮）的混合和置换操作，产生一个伪随机输出。每轮包括一系列的四字操作，如四字加法、异或和位移。
-
-3. **加密/解密**：生成的**伪随机字节序列**与**明文或密文进行XOR操作**，输出加密后的密文或解密后的明文。
-
-### 加密和解密方法
-
-ChaCha20的加密和解密操作是相同的，因为它们都是基于XOR操作。这意味着加密和解密使用相同的函数，关键是确保使用相同的密钥、随机数（nonce）和计数器值。
-
-```python
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.backends import default_backend
-
-def chacha20_encrypt_decrypt(key, nonce, data):
-    cipher = Cipher(algorithms.ChaCha20(key, nonce), mode=None, backend=default_backend())
-    encryptor_decryptor = cipher.encryptor()  # 对于解密，也可以调用 cipher.decryptor()
-    
-    return encryptor_decryptor.update(data) + encryptor_decryptor.finalize()
-```
-
-**注意**：在实际应用中，确保密钥(Key)和随机数(nonce)的安全性至关重要，因为它们直接影响加密的安全性。随机数(nonce)不应重复使用同一密钥，以防止重放攻击和其他安全漏洞。
 
 
 

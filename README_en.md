@@ -1,4 +1,4 @@
-# A-watermark-for-Diffusion-Models
+# A watermark for Diffusion Models
 
 
 
