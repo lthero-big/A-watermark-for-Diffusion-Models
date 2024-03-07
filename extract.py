@@ -161,17 +161,24 @@ def recover_exactracted_message(reversed_latents, key, nonce, l=1):
 
     # 解密m以恢复扩散过程前的数据s_d
     s_d_reconstructed = decryptor.update(m_reconstructed_bytes) + decryptor.finalize()
-
-    # 假设原始水印消息k是s_d的前32字节
-    k_reconstructed = s_d_reconstructed[:32]
-
-    # 将重构的k转换为十六进制表示
-    k_reconstructed_hex = k_reconstructed.hex()
-
-    # 将重构的k转换为二进制表示
-    k_reconstructed_bin = ''.join(format(byte, '08b') for byte in k_reconstructed)
     
-    return k_reconstructed_bin
+    # 使用vote机制
+    # 解密得到的字节串转换为二进制表示
+    bits_list = ['{:08b}'.format(byte) for byte in s_d_reconstructed]
+    # 将二进制字符串合并为一个长字符串
+    all_bits = ''.join(bits_list)
+    # 分割为64个段，每段代表s_d中的一行
+    segments = [all_bits[i:i+256] for i in range(0, len(all_bits), 256)]
+
+    # 投票机制确定每个位
+    reconstructed_message_bin = ''
+    for i in range(256):
+        # 计算每个位在所有行中为'1'的次数
+        count_1 = sum(segment[i] == '1' for segment in segments)
+        # 如果超过一半则该位为'1'，否则为'0'
+        reconstructed_message_bin += '1' if count_1 > len(segments) / 2 else '0'
+
+    return reconstructed_message_bin
 
 
 
@@ -265,6 +272,3 @@ if __name__ == "__main__":
         get_result_for_one_image(args)
     else:
         print("Please set the argument 'image_directory_path' or 'single_image_path'")
-
-
-    
