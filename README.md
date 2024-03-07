@@ -1,8 +1,11 @@
 # A-watermark-for-Diffusion-Models
 
 > [!NOTE]
+> a implement of paper **Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models**.
 
  
+
+
 
 ## 特性
 
