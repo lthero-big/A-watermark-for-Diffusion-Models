@@ -1,6 +1,8 @@
 # A-watermark-for-Diffusion-Models
 
-[中文](./README_zh.md)
+
+
+<center><a href="./README.md">中文</a> | English</center> 
 
 > [!Note]
 > This is an **unofficial** implementation of the Paper by Kejiang Chen et.al. on **Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models**
