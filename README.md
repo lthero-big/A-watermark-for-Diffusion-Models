@@ -1,7 +1,11 @@
 # A-watermark-for-Diffusion-Models
 
+[Read in English](./README_en.md)
+
+
+
 > [!NOTE]
-> a implement of paper **Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models**.
+> This is an **unofficial** implementation of the Paper by Kejiang Chen et.al. on **Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models**
 
  
 
@@ -12,11 +16,9 @@
 - [x] 支持Stable Diffusion不同版本：v1-4 , v2-0 ,v2-1 :tada:
 - [x] 支持**命令行SD**和**可视化SD-webui** :+1:
 - [x] 无需额外训练，仅对初始噪声矩阵进行修改，对图像质量几乎无影响 :sparkles:
-- [x] 即插即用（plug and play），插件化使用方式 :heavy_check_mark:
+- [x] 即插即用，插件化使用方式 :heavy_check_mark:
 
 -----------
-
-
 
 
 
@@ -78,7 +80,41 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 
 
 
-### 提取水印消息
+## 【可视化】使用教程
+
+> 可视化是基于[Stable Diffusion-WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)项目，本项目以脚本的形式实现嵌入水印的功能
+
+### 脚本安装
+
+1. 把本项目`scripts`目录下的`GS_watermark_insert.py`文件放在Stable Diffusion-WebUI的`scripts`目录下面
+2. 随后，**重启webui**，在**txt2img和img2img**栏目最下方的脚本选项中可以找到“**GS_watermark_insert**”
+
+![image-20240303215705020](https://cdn.lthero.cn/post_images/course/ML/image-20240303215705020.png)
+
+### 脚本提供的三个参数
+
+* Key：需要输入**十六进制形式的32字节内容**
+* Nonce：需要输入**十六进制形式的16字节内容**
+* Message：内容不**超过32字节**（可以输入字符串）
+  * 可以仅填写Key，将Nonce留空，会自动选择Nonce
+
+* Key和Nonce都可以留空，此时**会自动生成Key和Nonce**
+
+> [!important]
+>
+> 可在Stable Diffusion-WebUI的根目录下，可以找到info_data.txt，其记录着Key，Nonce，Message
+
+### 图像生成
+
+* 填写完成脚本提供的三个参数后，按正常的流程生成图像即可，生成的图像会带有水印
+
+
+
+---
+
+
+
+## 提取水印消息
 
 #### 方式1
 
@@ -135,34 +171,6 @@ Bit accuracy:  1.0
 
 
 
-
-## 【可视化】使用教程
-
-> 可视化是基于[Stable Diffusion-WebUI](https://github.com/AUTOMATIC1111/stable-diffusion-webui)项目，本项目以脚本的形式实现功能
-
-### 脚本安装
-
-1. 把本项目`scripts`目录下的GS_watermark_insert.py放在Stable Diffusion-WebUI的`scripts`目录下面
-2. 随后，**重启webui**，在**txt2img和img2img**的最下方脚本中找到“**GS_watermark_insert**”
-
-![image-20240303215705020](https://cdn.lthero.cn/post_images/course/ML/image-20240303215705020.png)
-
-### 脚本提供的三个参数
-
-* Key, Nonce, Message
-* Key需要**32字节十六进制输入**，Nonce需要**16字节十六进制输入**
-  * 可以仅填写Key，将Nonce留空
-  * Key和Nonce都可以留空
-* Message内容不超过32字节（可以输入字符串）
-
-> [!important]
->
-> 可在Stable Diffusion-WebUI的根目录下，找到info_data.txt，其记录着Key，Nonce，Message
-
-### 图像生成
-
-* 填写完成脚本提供的三个参数后，按正常的习惯生成图像即可，图像会自带水印
-* 水印的提取方式同上述的命令行教程
 
 
 
