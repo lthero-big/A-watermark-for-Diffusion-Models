@@ -144,12 +144,17 @@ python extricate.py
 * image_directory_path：**批量处理**，待检测图像的**目录路径**，如"/xxx/images"
   * 两种方式每次只能选择一种，另一种留空；**如果都不为空，仅按目录路径处理**
 
-* key_hex：使用**十六进制作为输入**，被保留在info_data.txt中
-* nonce_hex：使用**十六进制作为输入**，被保留在info_data.txt中
-* original_message_hex：输入的消息会**被转成十六进制**，被保留在info_data.txt中
-* num_inference_steps：逆向推理步数，默认为**50步**；不建议继续上调，如解码速度慢，可以适当下降到20步
+* key_hex：需要输入**十六进制形式的32字节内容**，key_hex被保留在info_data.txt中
+* nonce_hex：需要输入**十六进制形式的16字节内容**，nonce_hex被保留在info_data.txt中
+* original_message_hex：当你生成图像时，原始的消息被被自动转成十六进制，并被保留在info_data.txt中
+* num_inference_steps：逆向推理步数，默认为**50步**；
+  * 不建议继续上调，如解码速度慢，可以适当下降到20步
+
 * scheduler: 选择采样器，有"DPMs"和"DDIM"两种选择，默认使用DDIM
-* is_traverse_subdirectories: 是否对子目录进行递归提取，设置为0，则仅对目录下的图像处理。设置为0，则仅对目录下的所有子目录中的图像处理（包含子目录的子目录）
+* is_traverse_subdirectories: 是否对子目录进行递归提取
+  * 设置为0，则仅对目录下的所有图像处理
+  * 设置为1，则仅对目录下的所有子目录中的图像处理（包含子目录的子目录等）
+
 
 > [!caution]
 >

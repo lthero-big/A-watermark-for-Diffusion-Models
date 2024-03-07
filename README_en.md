@@ -157,7 +157,8 @@ python extricate.py \
   * with "DPMs" and "DDIM" as options, set default as DDIM.
 
 * is_traverse_subdirectories: Whether to recursively extract from subdirectories. 
-  * If set to 0, it only processes images in the directory. If set to 1, it processes images in all subdirectories (including subdirectories of subdirectories).
+  * If set to 0, it only processes images in the directory
+  * If set to 1, it processes images in all subdirectories (including subdirectories of subdirectories,etc).
 
 
 > [!caution]
