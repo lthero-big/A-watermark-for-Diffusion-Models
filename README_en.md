@@ -2,7 +2,9 @@
 
 
 
-<center><a href="./README.md">中文</a> | English</center> 
+<p align="center"><a href="./README.md">中文</a> | English</p>
+
+ 
 
 > [!Note]
 > This is an **unofficial** implementation of the Paper by Kejiang Chen et.al. on **Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models**
