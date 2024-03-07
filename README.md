@@ -92,7 +92,7 @@ python extricate.py --orig_image_path "path_to_image.png" \
 --key_hex "xxxxxxxxxx" \
 --original_message_hex "xxxxxxxxxxxxx" \
 --num_inference_steps 50
---scheduler "DPMs"
+--scheduler "DDIM"
 ```
 
 #### 参数解释
@@ -101,8 +101,8 @@ python extricate.py --orig_image_path "path_to_image.png" \
 * key_hex：使用**十六进制作为输入**，被保留在info_data.txt中
 * nonce_hex：使用**十六进制作为输入**，被保留在info_data.txt中
 * original_message_hex：输入的消息会**被转成十六进制**，被保留在info_data.txt中
-* num_inference_steps：推理步数，默认为50步，适当上调可以提高比特正确率
-* --scheduler: 选择采样器，有"DPMs"和"DDIM"两种选择，原论文使用了DDIM，但DDIM还没测试成功
+* num_inference_steps：推理步数，默认为**50步**；不建议继续上调，如解码速度慢，可以适当下降到20步
+* scheduler: 选择采样器，有"DPMs"和"DDIM"两种选择，默认使用DDIM
 
 > [!caution]
 >
