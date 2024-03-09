@@ -22,12 +22,108 @@
 
 
 
+## Generated images
+
+<div align=center>
+<img src="images/without_gs_watermark.png" width="256" height="256"><img src="images/with_gs_watermark.png" width="256" height="256"/>
+</div>
+<p align="center">Watermarked image on the left | Image without watermark on the right</p>
+
+
+
+
+
 ## Tutorial for SD-CLI
 
 ### Generating Watermarked Images
 
 1. Download and ensure the original [Stable Diffusion project](https://github.com/Stability-AI/stablediffusion) is able to generate images.
-2. Place **txt2img.py** from this project into the scripts directory of the Stable Diffusion project, **replacing the original txt2img.py**.
+2. Add the following codes into `txt2img.py` in the `scripts` folder of Stable Diffusion.
+
+First, add the following codes at the end of the function `parse_args()`
+
+```python
+parser.add_argument(
+    "--message",
+    type=str,
+    default="",
+    help="watermark message",
+)
+parser.add_argument(
+    "--key_hex",
+    type=str,
+    default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7",
+    help="key_hex",
+)
+parser.add_argument(
+    "--nonce_hex",
+    type=str,
+    default="05072fd1c2265f6f2e2a4080a2bfbdd8",
+    help="nonce_hex",
+)
+```
+
+And you will get things like this
+
+```python
+parser.add_argument(
+    "--bf16",
+    action='store_true',
+    help="Use bfloat16",
+)
+# Here are the new codes
+############################
+parser.add_argument(
+    "--message",
+    type=str,
+    default="",
+    help="watermark message",
+)
+parser.add_argument(
+    "--key_hex",
+    type=str,
+    default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7",
+    help="key_hex",
+)
+parser.add_argument(
+    "--nonce_hex",
+    type=str,
+    default="05072fd1c2265f6f2e2a4080a2bfbdd8",
+    help="nonce_hex",
+)
+##############################
+opt = parser.parse_args()
+return opt
+```
+
+
+
+Second, add the following codes after the line `for n in trange(opt.n_iter, *desc*="Sampling"):`
+
+```python
+from gs_insert import gs_watermark_init_noise
+Z_s_T_arrays = [gs_watermark_init_noise(opt,opt.message) for _ in range(opt.n_samples)]
+start_code = torch.stack([torch.tensor(Z_s_T_array).float() for Z_s_T_array in Z_s_T_arrays]).to(device)
+```
+
+It will be like
+
+```python
+for n in trange(opt.n_iter, desc="Sampling"):
+    # Here are the new codes
+    ############################
+    from gs_insert import gs_watermark_init_noise
+    Z_s_T_arrays = [gs_watermark_init_noise(opt,opt.message) for _ in range(opt.n_samples)]
+    start_code = torch.stack([torch.tensor(Z_s_T_array).float() for Z_s_T_array in Z_s_T_arrays]).to(device)
+    ##############################
+    for prompts in tqdm(data, desc="data"):
+        uc = None
+        if opt.scale != 1.0:
+            uc = model.get_learned_conditioning(batch_size * [""])
+```
+
+
+
 3. Execute the command below to generate watermarked images.
 
 ```shell
