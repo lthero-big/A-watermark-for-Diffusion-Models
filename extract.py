@@ -15,7 +15,7 @@ from cryptography.hazmat.backends import default_backend
 import numpy as np
 from scipy.stats import norm
 from datetime import datetime
-from diffusers import DDIMScheduler, DDIMInverseScheduler, StableDiffusionDiffEditPipeline
+from diffusers import StableDiffusionDiffEditPipeline
 from diffusers.utils import load_image
 
 from typing import Union, Tuple, Optional
@@ -74,38 +74,10 @@ def exactract_latents_DDIM_inversion(args) -> torch.Tensor:
                           num_inference_steps=args.num_inference_steps, latents=latents)
     return inv_latents.cpu()
 
-#  credit to: https://github.com/YuxinWenRick/tree-ring-watermark 
-def exactract_latents_DDIM_inversion_official(args):
-    
-    pipeline = StableDiffusionDiffEditPipeline.from_pretrained(
-        args.model_id,
-        torch_dtype=torch.float16,
-        safety_checker=None,
-    )
-    pipeline.scheduler = DDIMScheduler.from_config(pipeline.scheduler.config)
-    pipeline.inverse_scheduler = DDIMInverseScheduler.from_config(pipeline.scheduler.config)
-    pipeline.enable_model_cpu_offload()
-    pipeline.enable_vae_slicing()
-    generator = torch.manual_seed(0)
-
-    raw_image = load_image(args.single_image_path).convert("RGB").resize((512, 512))
-    source_prompt = ""
-    target_prompt = ""
-    inv_latents = pipeline.invert(prompt=source_prompt, image=raw_image, generator=generator).latents
-    return inv_latents
-
-def exactract_latents(args):
+def exactract_latents_DPMs_inversion(args):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     # 
-    if args.scheduler=="DPMs":
-        scheduler = DPMSolverMultistepScheduler.from_pretrained(args.model_id, subfolder='scheduler')
-    elif args.scheduler=="DDIM":
-        # not official but it works
-        return exactract_latents_DDIM_inversion(args)
-        
-        # official's way doesn't work
-        # return exactract_latents_DDIM_inversion_official(args)
-    
+    scheduler = DPMSolverMultistepScheduler.from_pretrained(args.model_id, subfolder='scheduler')
     pipe = InversableStableDiffusionPipeline.from_pretrained(
         args.model_id,
         scheduler=scheduler,
@@ -116,15 +88,15 @@ def exactract_latents(args):
         )
     pipe = pipe.to(device)
     tester_prompt = ''
-    # assume at the detection time, the original prompt is unknown，原论文中使用的就是空prompt
+    # assume at the detection time, the original prompt is unknown
     text_embeddings = pipe.get_text_embedding(tester_prompt)
-    # 格式PIL.Image.Image
+    # PIL.Image.Image
     orig_image = Image.open(args.single_image_path).convert("RGB")
     # 
     img_w = transform_img(orig_image).unsqueeze(0).to(torch.float16).to(device)
     # 
     image_latents = pipe.get_image_latents(img_w, sample=False)
-    # 获得逆向后的噪声矩阵，这里与推理步数有关，越大会变好
+    # 
     reversed_latents = pipe.forward_diffusion(
             latents=image_latents,
             text_embeddings=text_embeddings,
@@ -133,6 +105,12 @@ def exactract_latents(args):
         )
 
     return reversed_latents.cpu()
+
+def exactract_latents(args):    
+    if args.scheduler=="DPMs":
+        return exactract_latents_DPMs_inversion(args)
+    elif args.scheduler=="DDIM":
+        return exactract_latents_DDIM_inversion(args)
 
 
 
@@ -197,19 +175,23 @@ def get_result_for_one_image(args):
     print(f"{os.path.basename(args.single_image_path)}, Bit Accuracy,{bit_accuracy}\n")
     return original_message_bin,extracted_message_bin,bit_accuracy
 
-    
+   
 import os
 import glob
 from datetime import datetime
-from tqdm import tqdm
 
 def process_directory(args):
     # 是否递归子目录
     if args.is_traverse_subdirectories:
-        for root, dirs, files in os.walk(args.image_directory_path):
+        with open(os.path.join(args.image_directory_path, "result.txt"), "a") as root_result_file:
+            write_batch_info(root_result_file, args)
+        for root, dirs, files in tqdm(os.walk(args.image_directory_path)):
+            print("="*20+root+"="*20)
             for dir in dirs:
                 dir_path = os.path.join(root, dir)
                 process_single_directory(dir_path, args)
+        with open(os.path.join(args.image_directory_path, "result.txt"), "a") as root_result_file:
+            root_result_file.write("=" * 40 + "Batch End" + "=" * 40 + "\n\n")
     else:
         process_single_directory(args.image_directory_path, args)
 
@@ -245,9 +227,8 @@ def process_single_directory(dir_path, args):
             # 如果是子目录的子目录（例如`batch_01_withmark_addnoise`下的`JPEG_QF_10`目录），更新父目录的result.txt
             parent_dir = os.path.dirname(dir_path)
             with open(os.path.join(parent_dir, "result.txt"), "a") as parent_result_file:
-                write_batch_info(parent_result_file, args)
                 parent_result_file.write(f"{os.path.basename(dir_path)}, Average Bit Accuracy, {average_bit_accuracy}\n")
-                parent_result_file.write("=" * 40 + "Batch End" + "=" * 40 + "\n")
+                
 
 def write_batch_info(result_file, args):
     result_file.write("=" * 40 + "Batch Info" + "=" * 40 + "\n")
@@ -269,7 +250,8 @@ if __name__ == "__main__":
     # stabilityai/stable-diffusion-2-1-base is for 512x512
     parser.add_argument('--model_id', default='stabilityai/stable-diffusion-2-1-base')
     # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t
-    parser.add_argument('--image_directory_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t/gs_batch_01_withmark_addnoise", 
+    # /home/dongli911/.wan/Project/AIGC/gs_insert/images/gs_batch_01_withmark_attack2
+    parser.add_argument('--image_directory_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t", 
     help='The path of directory containing images to process')
     # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/need2test/v2-1_512_00642-1_DDIM_50s.png
     parser.add_argument('--single_image_path', default="")
@@ -278,10 +260,10 @@ if __name__ == "__main__":
     # nonce_hex=14192f43863f6bad1bf54b7832697389
     parser.add_argument('--nonce_hex', default="05072fd1c2265f6f2e2a4080a2bfbdd8", help='Hexadecimal nonce used for encryption, if empty will use part of the key')
     parser.add_argument('--original_message_hex', default="6c746865726f0000000000000000000000000000000000000000000000000000", 
-    help='Hexadecimal representation of the original message for accuracy calculation')
+                        help='Hexadecimal representation of the original message for accuracy calculation')
     parser.add_argument('--num_inference_steps', default=50, type=int, help='Number of inference steps for the model')
     parser.add_argument('--scheduler', default="DDIM", help="Choose a scheduler between 'DPMs' and 'DDIM' to inverse the image")
-    parser.add_argument('--is_traverse_subdirectories', default=1, help="Whether to traverse subdirectories recursively")
+    parser.add_argument('--is_traverse_subdirectories', default=0, help="Whether to traverse subdirectories recursively")
     parser.add_argument('--l', default=1, type=int, help="The size of slide windows for m")
     args = parser.parse_args()
 
