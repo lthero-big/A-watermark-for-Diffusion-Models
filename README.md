@@ -24,7 +24,7 @@
 ## 生成图像展示
 
 <div align=center>
-<img src="without_gs_watermark.png" width="256" height="256"><img src="with_gs_watermark.png" width="256" height="256"/>
+<img src="images/without_gs_watermark.png" width="256" height="256"><img src="images/with_gs_watermark.png" width="256" height="256"/>
 </div>
 <p align="center">左侧是无水印图像，右侧是有水印图像</p>
 
@@ -181,9 +181,10 @@ python scripts/txt2img.py \
 1. 把本项目`scripts`目录下的`GS_watermark_insert.py`文件放在Stable Diffusion-WebUI的`scripts`目录下面
 2. 随后，**重启webui**，在**txt2img和img2img**栏目最下方的脚本选项中可以找到“**GS_watermark_insert**”
 
-![image-script in webui](image-script_in_webui.png)
-
-
+<div align=center>
+<img src="images/image-script_in_webui.png" >
+</div>
+<p align="center">在webui中的GS_watermark_insert脚本</p>
 
 ### 脚本提供的三个参数
 
