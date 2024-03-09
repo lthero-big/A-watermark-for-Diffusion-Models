@@ -75,8 +75,6 @@ def exactract_latents_DDIM_inversion(args) -> torch.Tensor:
     return inv_latents.cpu()
 
 #  credit to: https://github.com/YuxinWenRick/tree-ring-watermark 
-
-
 def exactract_latents_DDIM_inversion_official(args):
     
     pipeline = StableDiffusionDiffEditPipeline.from_pretrained(
@@ -90,9 +88,6 @@ def exactract_latents_DDIM_inversion_official(args):
     pipeline.enable_vae_slicing()
     generator = torch.manual_seed(0)
 
-    
-
-    # raw_image = load_image(args.single_image_path).convert("RGB").resize((768, 768))
     raw_image = load_image(args.single_image_path).convert("RGB").resize((512, 512))
     source_prompt = ""
     target_prompt = ""
@@ -202,32 +197,6 @@ def get_result_for_one_image(args):
     print(f"{os.path.basename(args.single_image_path)}, Bit Accuracy,{bit_accuracy}\n")
     return original_message_bin,extracted_message_bin,bit_accuracy
 
-# old version
-# def process_directory(args):
-#     # Get all image files in the directory
-#     image_files = glob.glob(os.path.join(args.image_directory_path, "*.png")) + glob.glob(os.path.join(args.image_directory_path, "*.jpg"))
-
-#     with open(args.image_directory_path+"/"+"result.txt", "a") as result_file:
-#         result_file.write("=" * 40 +"Batch Info"+"=" * 40+"\n")
-#         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-#         result_file.write(f"Time: {current_time}\n")
-#         result_file.write(f"key_hex:{args.key_hex}\n")
-#         result_file.write(f"nonce_hex:{args.nonce_hex} \n")
-#         result_file.write(f"original_message_hex:{args.original_message_hex} \n")
-#         result_file.write(f"num_inference_steps:{args.num_inference_steps}\n")
-#         result_file.write(f"scheduler:{args.scheduler}\n")
-#         result_file.write("=" * 40 +"Batch Start"+"=" * 40+"\n")
-#         for image_path in tqdm(image_files):
-#             args.single_image_path = image_path
-#             try:
-#                 # Process each image
-#                 result=get_result_for_one_image(args)
-#                 result_file.write(f"{os.path.basename(image_path)}, Bit Accuracy, {result[2]}\n")
-#                 # result_file.write(f"{os.path.basename(image_path)}: Original Message: {result[0]} , Extracted Message: {result[1]}, Bit Accuracy: {result[2]}\n")
-#             except Exception as e:
-#                 print(f"Error processing {image_path}: {e}\n")
-#                 result_file.write(f"Error processing {image_path}: {e}\n")
-#         result_file.write("=" * 40 +"Batch End"+"=" * 40+"\n\n")
     
 import os
 import glob

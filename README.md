@@ -21,20 +21,112 @@
 - [x] 即插即用，插件化使用方式 :heavy_check_mark:
 
 -----------
+## 生成图像展示
 
-
-
+<div align=center>
+<img src="without_gs_watermark.png" width="256" height="256"><img src="with_gs_watermark.png" width="256" height="256"/>
+</div>
+<p align="center">左侧是无水印图像，右侧是有水印图像</p>
 
 ## 【命令行】使用教程
 
 ### 生成水印图像
 
 1. 下载并确保原始的[Stable Diffusion项目](https://github.com/Stability-AI/stablediffusion)可以生成图像
-2. 将本项目中**txt2img.py**放在Stable Diffusion项目的scripts目录下，**替换掉原txt2img.py**
+1. 将本项目中的gs_insert.py放在Stable Diffusion目录下的scripts目录中
+1. 对txt2img.py添加一部分代码
+
+在txt2img.py代码中`parse_args()`添加下面的代码
+
+```python
+parser.add_argument(
+    "--message",
+    type=str,
+    default="",
+    help="watermark message",
+)
+parser.add_argument(
+    "--key_hex",
+    type=str,
+    default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7",
+    help="key_hex",
+)
+parser.add_argument(
+    "--nonce_hex",
+    type=str,
+    default="05072fd1c2265f6f2e2a4080a2bfbdd8",
+    help="nonce_hex",
+)
+```
+
+最终效果如下
+
+```python
+parser.add_argument(
+    "--bf16",
+    action='store_true',
+    help="Use bfloat16",
+)
+# 在这里添加新代码
+parser.add_argument(
+    "--message",
+    type=str,
+    default="",
+    help="watermark message",
+)
+parser.add_argument(
+    "--key_hex",
+    type=str,
+    default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7",
+    help="key_hex",
+)
+parser.add_argument(
+    "--nonce_hex",
+    type=str,
+    default="05072fd1c2265f6f2e2a4080a2bfbdd8",
+    help="nonce_hex",
+)
+# 以下为原代码
+opt = parser.parse_args()
+return opt
+```
+
+
+
+
+
+
+
+在txt2img.py代码中`for n in trange(opt.n_iter, *desc*="Sampling"):`的首行添加下面的代码
+
+```python
+from gs_insert import gs_watermark_init_noise
+Z_s_T_arrays = [gs_watermark_init_noise(opt,opt.message) for _ in range(opt.n_samples)]
+start_code = torch.stack([torch.tensor(Z_s_T_array).float() for Z_s_T_array in Z_s_T_arrays]).to(device)
+```
+
+最终效果为
+
+```python
+for n in trange(opt.n_iter, desc="Sampling"):
+    # 在这里添加了三行
+    from gs_insert import gs_watermark_init_noise
+    Z_s_T_arrays = [gs_watermark_init_noise(opt,opt.message) for _ in range(opt.n_samples)]
+    start_code = torch.stack([torch.tensor(Z_s_T_array).float() for Z_s_T_array in Z_s_T_arrays]).to(device)
+    # 下面的保持原代码
+    for prompts in tqdm(data, desc="data"):
+        uc = None
+        if opt.scale != 1.0:
+            uc = model.get_learned_conditioning(batch_size * [""])
+```
+
+
+
 3. 运行下面的命令，即可生成水印图像
 
 ```shell
-python scripts/txt2img.py --prompt "a professional photograph of an astronaut riding a horse" \
+python scripts/txt2img.py \
+--prompt "a professional photograph of an astronaut riding a horse" \
 --ckpt ../ckpt/v2-1_512-ema-pruned.ckpt \
 --config ./configs/stable-diffusion/v2-inference.yaml \
 --H 512 --W 512  \
@@ -46,8 +138,6 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 ```
 
  
-
-
 
 #### 参数解释
 
@@ -92,8 +182,6 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 2. 随后，**重启webui**，在**txt2img和img2img**栏目最下方的脚本选项中可以找到“**GS_watermark_insert**”
 
 ![image-script in webui](image-script_in_webui.png)
-
-
 
 
 
