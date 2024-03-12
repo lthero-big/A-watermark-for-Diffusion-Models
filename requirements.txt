@@ -1,4 +1,4 @@
-diffusers==0.21.0
+diffusers==0.26.0
 cryptography
 scipy
 tqdm
