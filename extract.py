@@ -1,23 +1,17 @@
 import torch
-from inverse_stable_diffusion_gs import InversableStableDiffusionPipeline
 import argparse
 from PIL import Image
 from tqdm import tqdm
-from statistics import mean, stdev
-from sklearn import metrics
 from scipy.stats import norm
-from diffusers import DPMSolverMultistepScheduler,StableDiffusionPipeline, DDIMInverseScheduler, AutoencoderKL, DDIMScheduler
-import open_clip
-from optim_utils import *
-from io_utils import *
+from diffusers import DPMSolverMultistepScheduler,StableDiffusionPipeline, DDIMInverseScheduler, AutoencoderKL,DPMSolverMultistepInverseScheduler
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import numpy as np
 from scipy.stats import norm
 from datetime import datetime
-from diffusers import StableDiffusionDiffEditPipeline
 from diffusers.utils import load_image
-
+import os
+import glob
 from typing import Union, Tuple, Optional
 from torchvision import transforms as tvt
 
@@ -25,7 +19,6 @@ from torchvision import transforms as tvt
 # credit to: https://github.com/shaibagon/diffusers_ddim_inversion
 # credit to: https://github.com/cccntu/efficient-prompt-to-prompt/blob/main/ddim-inversion.ipynb
 # credit to: https://github.com/google/prompt-to-prompt/blob/main/null_text_w_ptp.ipynb
-# Used for exactract_latents_DDIM_inversion
 
 def disabled_safety_checker(images, clip_input):
     if len(images.shape)==4:
@@ -41,9 +34,8 @@ def load_image(imgname: str, target_size: Optional[Union[int, Tuple[int, int]]] 
         if isinstance(target_size, int):
             target_size = (target_size, target_size)
         pil_img = pil_img.resize(target_size, Image.Resampling.LANCZOS)
-    return tvt.ToTensor()(pil_img)[None, ...]  # add batch dimension
+    return tvt.ToTensor()(pil_img)[None, ...] 
 
-# Used for exactract_latents_DDIM_inversion
 def img_to_latents(x: torch.Tensor, vae: AutoencoderKL):
     x = 2. * x - 1.
     posterior = vae.encode(x).latent_dist
@@ -51,15 +43,18 @@ def img_to_latents(x: torch.Tensor, vae: AutoencoderKL):
     return latents
 
 
-@torch.no_grad()
-def exactract_latents_DDIM_inversion(args) -> torch.Tensor:
+def exactract_latents(args):    
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     dtype = torch.float16
+    if args.scheduler=="DPMs":
+        inverse_scheduler = DPMSolverMultistepInverseScheduler.from_pretrained(args.model_id, subfolder='scheduler')
+    elif args.scheduler=="DDIM":
+        inverse_scheduler = DDIMInverseScheduler.from_pretrained(args.model_id, subfolder='scheduler')
+    else:
+        raise ValueError("Please choose 'DPMs' or 'DDIM' for the scheduler.")
 
-    inverse_scheduler = DDIMInverseScheduler.from_pretrained(args.model_id, subfolder='scheduler')
     pipe = StableDiffusionPipeline.from_pretrained(args.model_id,
                                                    scheduler=inverse_scheduler,
-                                                #    safety_checker=None,
                                                    safety_checker = disabled_safety_checker,
                                                    torch_dtype=dtype)
     pipe.to(device)
@@ -74,52 +69,13 @@ def exactract_latents_DDIM_inversion(args) -> torch.Tensor:
                           num_inference_steps=args.num_inference_steps, latents=latents)
     return inv_latents.cpu()
 
-def exactract_latents_DPMs_inversion(args):
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    # 
-    scheduler = DPMSolverMultistepScheduler.from_pretrained(args.model_id, subfolder='scheduler')
-    pipe = InversableStableDiffusionPipeline.from_pretrained(
-        args.model_id,
-        scheduler=scheduler,
-        torch_dtype=torch.float16,
-        variant='fp16',
-        # revision='fp16',
-        safety_checker = disabled_safety_checker
-        )
-    pipe = pipe.to(device)
-    tester_prompt = ''
-    # assume at the detection time, the original prompt is unknown
-    text_embeddings = pipe.get_text_embedding(tester_prompt)
-    # PIL.Image.Image
-    orig_image = Image.open(args.single_image_path).convert("RGB")
-    # 
-    img_w = transform_img(orig_image).unsqueeze(0).to(torch.float16).to(device)
-    # 
-    image_latents = pipe.get_image_latents(img_w, sample=False)
-    # 
-    reversed_latents = pipe.forward_diffusion(
-            latents=image_latents,
-            text_embeddings=text_embeddings,
-            guidance_scale=1,
-            num_inference_steps=args.num_inference_steps,
-        )
-
-    return reversed_latents.cpu()
-
-def exactract_latents(args):    
-    if args.scheduler=="DPMs":
-        return exactract_latents_DPMs_inversion(args)
-    elif args.scheduler=="DDIM":
-        return exactract_latents_DDIM_inversion(args)
-
-
 
 def recover_exactracted_message(reversed_latents, key, nonce, l=1):
-    # 初始化Cipher
+    # initiate the Cipher
     cipher = Cipher(algorithms.ChaCha20(key, nonce), mode=None, backend=default_backend())
     decryptor = cipher.decryptor()
     
-    # 从reversed_latents中恢复m的二进制表示
+    # Reconstruct m from reversed_latents
     reconstructed_m_bits = []
     for z_s_T_value in np.nditer(reversed_latents):
         # 使用norm.ppf的逆操作恢复原始的y值
@@ -176,9 +132,7 @@ def get_result_for_one_image(args):
     return original_message_bin,extracted_message_bin,bit_accuracy
 
    
-import os
-import glob
-from datetime import datetime
+
 
 def process_directory(args):
     # 是否递归子目录
@@ -211,7 +165,6 @@ def process_single_directory(dir_path, args):
         for image_path in tqdm(image_files):
             args.single_image_path = image_path
             try:
-                # 处理每张图片
                 result = get_result_for_one_image(args)
                 result_file.write(f"{os.path.basename(image_path)}, Bit Accuracy, {result[2]}\n")
                 total_bit_accuracy += float(result[2])
