@@ -198,15 +198,12 @@ def write_batch_info(result_file, args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Extract watermark from a image')
-    # 模型选择
     # stabilityai/stable-diffusion-2-1 is for 768x768
     # stabilityai/stable-diffusion-2-1-base is for 512x512
     parser.add_argument('--model_id', default='stabilityai/stable-diffusion-2-1-base')
-    # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t
-    # /home/dongli911/.wan/Project/AIGC/gs_insert/images/gs_batch_01_withmark_attack2
-    parser.add_argument('--image_directory_path', default="/home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/n2t", 
-    help='The path of directory containing images to process')
-    # /home/dongli911/.wan/Project/AIGC/stablediffusion/outputs/txt2img-samples/need2test/v2-1_512_00642-1_DDIM_50s.png
+
+    parser.add_argument('--image_directory_path', default="./n2t", help='The path of directory containing images to process')
+    # ./need2test/v2-1_512_00642-1_DDIM_50s.png
     parser.add_argument('--single_image_path', default="")
     # , required=True
     parser.add_argument('--key_hex', default="5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7", help='Hexadecimal key used for encryption')
