@@ -93,10 +93,6 @@ return opt
 
 
 
-
-
-
-
 在txt2img.py代码中`for n in trange(opt.n_iter, *desc*="Sampling"):`的首行添加下面的代码
 
 ```python
@@ -152,7 +148,7 @@ python scripts/txt2img.py \
   
 * --nonce_hex：随机数nonce（16字节）
   * 使用**十六进制作为输入**，用于将message进行加密
-  * nonce_hex可以不输入，如果不输入，则nonce_hex**默认使用key_hex中间16字节**
+  * nonce_hex可以不输入，nonce_hex**默认使用key_hex中间16字节**
   
 * --message: 嵌入的水印消息，最大支持256bit（32字节），超过此长度会被截断，不足会补充
 
@@ -165,6 +161,20 @@ python scripts/txt2img.py \
 > * key_hex和nonce_hex可以**都不输入**，则自动生成随机32字节的key_hex和随机16字节nonce_hex
 > * message也可以留空，会自动生成256bit（32字节）的随机内容
 > * 以上参数都会被保存在**info_data.txt**中（在Stable Diffusion项目的根目录下）
+>
+> 
+>
+> * 如果是第一次运行，key_hex和nonce_hex**都不输入**，从而让代码自动生成；或使用下面的代码生成key_hex和nonce_hex
+
+```python
+import os
+key = os.urandom(32)
+nonce = os.urandom(16)
+print(key.hex())
+print(nonce.hex())
+```
+
+
 
 
 
@@ -235,11 +245,16 @@ python extricate.py
 
 * single_image_path： **单张处理**，输入**单张待检测图像**的路径，如"/xxx/images/001.png"
 * image_directory_path：**批量处理**，待检测图像的**目录路径**，如"/xxx/images"
-  * 两种方式每次只能选择一种，另一种留空；**如果都不为空，仅按目录路径处理**
+  * 两种方式每次只能选择一种，另一种留空；
+  * **如果都不为空，仅按目录路径处理**
+  
+* key_hex：需要输入**十六进制形式的32字节内容**
+  * key_hex被**保留在info_data.txt**中
 
-* key_hex：需要输入**十六进制形式的32字节内容**，key_hex被保留在info_data.txt中
-* nonce_hex：需要输入**十六进制形式的16字节内容**，nonce_hex被保留在info_data.txt中
-* original_message_hex：当你生成图像时，原始的消息被被自动转成十六进制，并被保留在info_data.txt中
+* nonce_hex：需要输入**十六进制形式的16字节内容**
+  * nonce_hex被**保留在info_data.txt**中
+
+* original_message_hex：当你生成图像时，**原始的消息被被自动转成十六进制**，并被**保留在info_data.txt**中
 * num_inference_steps：逆向推理步数，默认为**50步**；
   * 不建议继续上调，如解码速度慢，可以适当下降到20步
 
@@ -255,7 +270,7 @@ python extricate.py
 
  
 
-运行extricate.py后，会输出图像名与Bit正确率
+运行extricate.py后，会输出**图像名**与**Bit正确率**
 
 ```shell
 v2-1_512_00098-3367722000JPEG_QF_75.jpg
@@ -264,9 +279,9 @@ Bit accuracy:  1.0
 
 > [!note]
 >
-> 如果使用批量处理方式，会在输入的目录中产生一个result.txt文件，记录每张图像的结果
+> 如果使用**批量处理方式**，会在输入的目录中产生一个result.txt文件，记录每张图像的结果
 >
-> 如果使用递归处理方式，image_directory_path下的每个子目录会有result.txt文件，并且image_directory_path下会有result.txt记录着每个子目录中平均Bit正确率
+> 如果使用**递归处理方式**，image_directory_path下的**每个子目录会有result.txt文件**，并且image_directory_path下会有result.txt记录着**每个子目录中平均Bit正确率**
 
 
 

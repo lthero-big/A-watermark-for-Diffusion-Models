@@ -47,12 +47,10 @@ def gs_watermark_init_noise(opt,message=""):
     m = encryptor.update(s_d) + encryptor.finalize()
     # 将m转换为二进制形式,m服从均匀分布
     m_bits = ''.join(format(byte, '08b') for byte in m)
-
     # 初始化结果列表，用于存储每个窗口的处理结果
     results = []
-
     # 窗口大小l，可以是除了1以外的其他值
-    l = 1  # 例如，改变这里为需要的窗口大小
+    l = 1  
 
     index=0
     Z_s_T_array = np.zeros((4, 64, 64))
@@ -60,7 +58,6 @@ def gs_watermark_init_noise(opt,message=""):
     for i in range(0, len(m_bits), l):
         window = m_bits[i:i+l]
         y = int(window, 2)  # 将窗口内的二进制序列转换为整数y
-
         # 生成随机u
         u = np.random.uniform(0, 1)
         # 计算z^s_T

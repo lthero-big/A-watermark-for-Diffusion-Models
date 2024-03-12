@@ -106,8 +106,6 @@ def recover_exactracted_message(reversed_latents, key, nonce, l=1):
 
     return reconstructed_message_bin
 
-
-
 def calculate_bit_accuracy(original_message_hex, extracted_message_bin):
     # Convert the original hex message to binary
     original_message_bin = bin(int(original_message_hex, 16))[2:].zfill(len(original_message_hex) * 4)
@@ -130,8 +128,6 @@ def get_result_for_one_image(args):
     # print(f"{os.path.basename(args.single_image_path)}\nOriginal Message: {original_message_bin} \nExtracted Message: {extracted_message_bin}\nBit Accuracy: {bit_accuracy}\n")
     print(f"{os.path.basename(args.single_image_path)}, Bit Accuracy,{bit_accuracy}\n")
     return original_message_bin,extracted_message_bin,bit_accuracy
-
-   
 
 
 def process_directory(args):

@@ -164,6 +164,15 @@ python scripts/txt2img.py --prompt "a professional photograph of an astronaut ri
 > * Both `key_hex` and `nonce_hex` can be **left unentered**, in which case a random 32-byte `key_hex` and a random 16-byte `nonce_hex` will be generated.
 > * The `message` can also be left blank, in which case a random 256-bit (32-byte) content will be generated.
 > * All the above parameters will be saved in **info_data.txt** (located in the root directory of the Stable Diffusion project).
+> * If it is the first run, just keep `key_hex` and `nonce_hex` be unentered, so that the code is automatically generated; Or use the following code to **generate** `key_hex` and `nonce_hex`
+
+```python
+import os
+key = os.urandom(32)
+nonce = os.urandom(16)
+print(key.hex())
+print(nonce.hex())
+```
 
 
 
