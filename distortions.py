@@ -13,7 +13,7 @@ from tqdm import tqdm
 from typing import Union, Tuple, Optional
 from diffusers import StableDiffusionPipeline, DDIMInverseScheduler, AutoencoderKL, DDIMScheduler
 
-
+# credit to:https://github.com/umd-huang-lab/WAVES
 distortion_strength_paras = dict(
     rotation=(0, 90),
     resizedcrop=(1, 0.1),
