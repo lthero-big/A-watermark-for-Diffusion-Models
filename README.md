@@ -28,6 +28,16 @@
 </div>
 <p align="center">左侧是无水印图像，右侧是有水印图像</p>
 
+<div align=center>
+<img src="images/attacks.png"/>
+    <p align="center">受失真攻击后的图像</p>
+</div>
+<div align=center>
+<img src="images/results.png"/>
+    <p align="center">比特正确率结果</p>
+</div>
+
+
 ## 【命令行】使用教程
 
 ### 生成水印图像
