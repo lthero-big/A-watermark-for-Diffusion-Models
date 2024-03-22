@@ -32,11 +32,11 @@
 
 
 <div align=center>
-<img src="images/attacks.png"/>
+<img src="images/Attacks.png"/>
     <p align="center">Images after distortions</p>
 </div>
 <div align=center>
-<img src="images/results.png"/>
+<img src="images/Results.png"/>
     <p align="center">Bit Accuracy Result</p>
 </div>
 
