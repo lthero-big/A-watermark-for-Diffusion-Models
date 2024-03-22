@@ -33,9 +33,10 @@
     <p align="center">受失真攻击后的图像</p>
 </div>
 <div align=center>
-<img src="images/results.png"/>
+<img src="images/Results.png"/>
     <p align="center">比特正确率结果</p>
 </div>
+
 
 
 ## 【命令行】使用教程
