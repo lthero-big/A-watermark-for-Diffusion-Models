@@ -1,8 +1,8 @@
 # A watermark for Diffusion Models
 
 
+<p align="center"><a href="./README_zh.md">中文</a> | English</p>
 
-<p align="center"><a href="./README.md">中文</a> | English</p>
 
  
 
