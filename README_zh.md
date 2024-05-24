@@ -2,7 +2,7 @@
 
 
 
-<p align="center"><a href="./README_en.md">English</a> | 中文</p>
+<p align="center"><a href="./README.md">English</a> | 中文</p>
 
  
 
