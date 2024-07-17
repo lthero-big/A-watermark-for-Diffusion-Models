@@ -123,7 +123,7 @@ def get_result_for_one_image(args):
 
 
 def process_directory(args):
-    if args.is_traverse_subdirectories==1:
+    if int(args.is_traverse_subdirectories)==1:
         with open(os.path.join(args.images_directory_path, "result.txt"), "a") as root_result_file:
             write_batch_info(root_result_file, args)
         for root, dirs, files in tqdm(os.walk(args.images_directory_path)):
