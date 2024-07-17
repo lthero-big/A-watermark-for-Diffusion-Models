@@ -202,6 +202,9 @@ print(nonce.hex())
 * Key: Requires input in **hexadecimal format of 32 bytes**.
 * Nonce: Requires input in **hexadecimal format of 16 bytes**.
 * Message: The content must **not exceed 32 bytes** (Any strings are allowed).
+* repeat message four times:  Keep the length of message as 64bit and repeat it four times for eatch line.This can improve bit accuracy greatly,set 1 to use, 0 is not.
+* use_randomSeed: Set a random seed in oder to generate the same picture with the same seed,set 1 to use, 0 is not.
+* Seed: the number you want to use. 
 
  
 
