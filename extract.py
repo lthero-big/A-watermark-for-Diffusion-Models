@@ -90,12 +90,27 @@ def recover_exactracted_message(reversed_latents, args):
     s_d_reconstructed = decryptor.update(m_reconstructed_bytes) + decryptor.finalize()
     bits_list = ['{:08b}'.format(byte) for byte in s_d_reconstructed]
     all_bits = ''.join(bits_list)
-    print(len(all_bits))
-    segments = [all_bits[i:i+256] for i in range(0, len(all_bits), 256)]
+
+    if args.repeat4times:
+        # 64 bit messages, each row has 4 messages, 64 rows total
+        message_length = 64
+        segment_length = message_length * 4
+    else:
+        # 256 bit messages, each row has 1 messages, 64 rows total
+        message_length = 256
+        segment_length = message_length * 1
+    
+    segments = [all_bits[i:i + segment_length] for i in range(0, len(all_bits), segment_length)]
     reconstructed_message_bin = ''
-    for i in range(256):
-        count_1 = sum(segment[i] == '1' for segment in segments)
-        reconstructed_message_bin += '1' if count_1 > len(segments) / 2 else '0'
+
+    if args.repeat4times:
+        for i in range(message_length):
+            count_1 = sum(segment[j*message_length + i] == '1' for segment in segments for j in range(4))
+            reconstructed_message_bin += '1' if count_1 > (len(segments) * 4) / 2 else '0'
+    else:
+        for i in range(message_length):
+            count_1 = sum(segment[i] == '1' for segment in segments)
+            reconstructed_message_bin += '1' if count_1 > len(segments) / 2 else '0'
 
     return reconstructed_message_bin
 
@@ -194,6 +209,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_inference_steps', default=50, type=int, help='Number of inference steps for the model')
     parser.add_argument('--scheduler', default="DDIM", help="Choose a scheduler between 'DPMs' and 'DDIM' to inverse the image")
     parser.add_argument('--is_traverse_subdirectories', default=0, help="Whether to traverse subdirectories recursively")
+    parser.add_argument('--repeat4times', action="store_true", help="Keep the length of message as 64bit and repeat it four times for eatch line.\nThis can improve bit accuracy greatly")
     parser.add_argument('--l', default=1, type=int, help="The size of slide windows for m")
 
     args = parser.parse_args()
