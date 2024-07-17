@@ -207,7 +207,7 @@ print(nonce.hex())
 </div>
 <p align="center">在webui中的GS_watermark_insert脚本</p>
 
-### 脚本提供的三个参数
+### 脚本提供的参数
 
 * Key：需要输入**十六进制形式的32字节内容**
 * Nonce：需要输入**十六进制形式的16字节内容**
@@ -215,10 +215,12 @@ print(nonce.hex())
   * 可以仅填写Key，将Nonce留空，会自动选择Nonce
 
 * Key和Nonce都可以留空，此时**会自动生成Key和Nonce**
+* repeat message four times: 设置消息长度为8字节并重复4次（平替原32字节内容），设置为1即生效，0即使用原方法
+* use_randomSeed: 是否使用随机种子，优点是可复现生成相同的图片，将use_randomSeed设置为1，并且设置Seed即可
 
 > [!important]
 >
-> 可在Stable Diffusion-WebUI的根目录下，可以找到info_data.txt，其记录着Key，Nonce，Message
+> 可在Stable Diffusion-WebUI的根目录下，可以找到info_data.txt，其记录着Key，Nonce，Message，randomSeed
 
 ### 图像生成
 
