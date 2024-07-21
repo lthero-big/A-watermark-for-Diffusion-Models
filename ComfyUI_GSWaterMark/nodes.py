@@ -92,19 +92,18 @@ def gs_watermark_init_noise(key_hex, nonce_hex, device,message,use_seed,randomSe
     return Z_s_T_array
 
 
-def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0, disable_noise=False, start_step=None, last_step=None, force_full_denoise=False, use_GS=False):
+def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0, disable_noise=False, start_step=None, last_step=None, force_full_denoise=False, use_GS=False,GS_latent_noise=None):
     latent_image = latent["samples"]
 
-    if disable_noise:
+    if use_GS:
+        noise = GS_latent_noise["samples"]
+    elif disable_noise:
         noise = torch.zeros(latent_image.size(), dtype=latent_image.dtype, layout=latent_image.layout, device="cpu")
-        if use_GS:
-            temp = noise
-            noise = latent_image
-            latent_image = temp
     else:
         batch_inds = latent["batch_index"] if "batch_index" in latent else None
         noise = comfy.sample.prepare_noise(latent_image, seed, batch_inds)
         
+
     noise_mask = None
     if "noise_mask" in latent:
         noise_mask = latent["noise_mask"]
@@ -134,6 +133,7 @@ class GSKSamplerAdvanced:
                     "positive": ("CONDITIONING", ),
                     "negative": ("CONDITIONING", ),
                     "latent_image": ("LATENT", ),
+                    "GS_latent_noise": ("LATENT", ),
                     "start_at_step": ("INT", {"default": 0, "min": 0, "max": 10000}),
                     "end_at_step": ("INT", {"default": 10000, "min": 0, "max": 10000}),
                     "return_with_leftover_noise": (["disable", "enable"], ),
@@ -145,7 +145,7 @@ class GSKSamplerAdvanced:
 
     CATEGORY = "GSWatermark-lthero/sampling"
 
-    def sample(self, model, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, add_GS_noise,start_at_step, end_at_step, return_with_leftover_noise, denoise=1.0):
+    def sample(self, model,add_GS_noise, add_noise, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image,GS_latent_noise,start_at_step, end_at_step, return_with_leftover_noise, denoise=1.0):
         force_full_denoise = True
         if return_with_leftover_noise == "enable":
             force_full_denoise = False
@@ -153,13 +153,12 @@ class GSKSamplerAdvanced:
         use_GS = False
         if add_GS_noise == "enable":
             use_GS=True
-            add_noise="disable"
         
         disable_noise = False
         if add_noise == "disable":
             disable_noise = True
         
-        return common_ksampler(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step, force_full_denoise=force_full_denoise, use_GS=use_GS)
+        return common_ksampler(model, noise_seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise, disable_noise=disable_noise, start_step=start_at_step, last_step=end_at_step, force_full_denoise=force_full_denoise, use_GS=use_GS,GS_latent_noise=GS_latent_noise)
        
 
 class GSLatent:
@@ -197,6 +196,6 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Lthero_GSLatent": "GS Latent",
+    "Lthero_GSLatent": "GS Latent Noise",
     "Lthero_GS_KSamplerAdvanced": "GS KSamplerAdvanced",
 }
