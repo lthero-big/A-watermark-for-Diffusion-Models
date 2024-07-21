@@ -15,7 +15,6 @@ import glob
 from typing import Union, Tuple, Optional
 from torchvision import transforms as tvt
 import matplotlib.pyplot as plt
-
 import numpy as np
 
 # credit to: https://github.com/shaibagon/diffusers_ddim_inversion
@@ -61,7 +60,7 @@ def exactract_latents(args):
     pipe.to(device)
     vae = pipe.vae
 
-    input_img = load_image(args.single_image_path,[512,512]).to(device=device, dtype=dtype)
+    input_img = load_image(args.single_image_path,[args.width,args.height]).to(device=device, dtype=dtype)
     latents = img_to_latents(input_img, vae)
 
     inv_latents, _ = pipe(prompt="", negative_prompt="", guidance_scale=1.,
@@ -69,8 +68,6 @@ def exactract_latents(args):
                           output_type='latent', return_dict=False,
                           num_inference_steps=args.num_inference_steps, latents=latents)
     return inv_latents.cpu()
-
-
 
 def recover_exactracted_message(reversed_latents, args):
     key=args.key
@@ -91,30 +88,17 @@ def recover_exactracted_message(reversed_latents, args):
     bits_list = ['{:08b}'.format(byte) for byte in s_d_reconstructed]
     all_bits = ''.join(bits_list)
 
-    if args.repeat4times:
-        # 64 bit messages, each row has 4 messages, 64 rows total
-        message_length = 64
-        segment_length = message_length * 4
-    else:
-        # 256 bit messages, each row has 1 messages, 64 rows total
-        message_length = 256
-        segment_length = message_length * 1
-    
+    message_length = int(args.message_length)
+    segment_length = message_length
+
     segments = [all_bits[i:i + segment_length] for i in range(0, len(all_bits), segment_length)]
     reconstructed_message_bin = ''
 
-    if args.repeat4times:
-        for i in range(message_length):
-            count_1 = sum(segment[j*message_length + i] == '1' for segment in segments for j in range(4))
-            reconstructed_message_bin += '1' if count_1 > (len(segments) * 4) / 2 else '0'
-    else:
-        for i in range(message_length):
-            count_1 = sum(segment[i] == '1' for segment in segments)
-            reconstructed_message_bin += '1' if count_1 > len(segments) / 2 else '0'
+    for i in range(message_length):
+        count_1 = sum(segment[i] == '1' for segment in segments)
+        reconstructed_message_bin += '1' if count_1 > len(segments) / 2 else '0'
 
     return reconstructed_message_bin
-
-
 
 def calculate_bit_accuracy(original_message_hex, extracted_message_bin):
     original_message_bin = bin(int(original_message_hex, 16))[2:].zfill(len(original_message_hex) * 4)
@@ -126,14 +110,10 @@ def calculate_bit_accuracy(original_message_hex, extracted_message_bin):
     return original_message_bin,bit_accuracy
 
 def get_result_for_one_image(args):
-    # Process each image
     reversed_latents = exactract_latents(args)
-
     extracted_message_bin = recover_exactracted_message(reversed_latents, args)
-    # 
     original_message_bin, bit_accuracy = calculate_bit_accuracy(args.original_message_hex, extracted_message_bin)
     print(f"{os.path.basename(args.single_image_path)}\nOriginal Message: {original_message_bin} \nExtracted Message: {extracted_message_bin}\nBit Accuracy: {bit_accuracy}\n")
-    # print(f"{os.path.basename(args.single_image_path)}, Bit Accuracy,{bit_accuracy}\n")
     return original_message_bin,extracted_message_bin,bit_accuracy
 
 
@@ -199,18 +179,21 @@ def write_batch_info(result_file, args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Extract watermark from a image')
     # stabilityai/stable-diffusion-2-1 is for 768x768
-    # stabilityai/stable-diffusion-2-1-base is for 512x512
+    # stabilityai/stable-diffusion-2-1-base is for 512x512 or higher
     parser.add_argument('--model_id', default='stabilityai/stable-diffusion-2-1-base')
     parser.add_argument('--images_directory_path', default="", help='The path of directory containing images to process')
     parser.add_argument('--single_image_path', default="")
     parser.add_argument('--key_hex', required=True, help='Hexadecimal key used for encryption')
     parser.add_argument('--nonce_hex', required=True, help='Hexadecimal nonce used for encryption, It will use the fixed part of the key if nonce is none')
     parser.add_argument('--original_message_hex', required=True, help='Hexadecimal representation of the original message for accuracy calculation')
-    parser.add_argument('--num_inference_steps', default=50, type=int, help='Number of inference steps for the model')
+    parser.add_argument('--num_inference_steps', default=30, type=int, help='Number of inference steps for the model')
     parser.add_argument('--scheduler', default="DDIM", help="Choose a scheduler between 'DPMs' and 'DDIM' to inverse the image")
     parser.add_argument('--is_traverse_subdirectories', default=0, help="Whether to traverse subdirectories recursively")
-    parser.add_argument('--repeat4times', action="store_true", help="Keep the length of message as 64bit and repeat it four times for eatch line.\nThis can improve bit accuracy greatly")
     parser.add_argument('--l', default=1, type=int, help="The size of slide windows for m")
+    parser.add_argument('--width', type=int, default=1024, help="Width of the input image")
+    parser.add_argument('--height', type=int, default=1024, help="Height of the input image")
+    parser.add_argument('--message_length', type=int, default=1024, help="Length of the message in bits")
+
 
     args = parser.parse_args()
 
