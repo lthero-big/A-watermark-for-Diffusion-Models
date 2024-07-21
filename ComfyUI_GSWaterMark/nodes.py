@@ -24,11 +24,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "co
 MAX_RESOLUTION=8192
 
 
-def gs_watermark_init_noise(key_hex, nonce_hex, device,message,use_seed,randomSeed,use_repeat):
+def gs_watermark_init_noise(key_hex, nonce_hex, device,message,use_seed,randomSeed,set64bit):
     if int(use_seed)==1:
         rng = np.random.RandomState(seed=randomSeed)  
 
-    if int(use_repeat)==1:
+    if int(set64bit)==1:
         LengthOfMessage_bytes=8
     else:
         LengthOfMessage_bytes=32
@@ -43,7 +43,7 @@ def gs_watermark_init_noise(key_hex, nonce_hex, device,message,use_seed,randomSe
     else:
         k = os.urandom(LengthOfMessage_bytes)
 
-    if int(use_repeat)==1:
+    if int(set64bit)==1:
         k=k*4
 
     s_d = k * 64
@@ -86,7 +86,7 @@ def gs_watermark_init_noise(key_hex, nonce_hex, device,message,use_seed,randomSe
         f.write(f'key: {key.hex()}\n')
         f.write(f'nonce: {nonce.hex()}\n')
         f.write(f'randomSeed: {randomSeed}\n')  
-        f.write(f'set64bit: {use_repeat}\n')
+        f.write(f'set64bit: {set64bit}\n')
         f.write(f'message: {k.hex()}\n')
         f.write('----------------------\n')
     return Z_s_T_array
@@ -126,7 +126,7 @@ class GSKSamplerAdvanced:
                     {"model": ("MODEL",),
                     "add_GS_noise": (["enable", "disable"], ),
                     "add_noise": (["disable","enable"], ),
-                    "noise_seed": ("INT", {"default": 42, "min": 0, "max": 0xffffffff}),
+                    "noise_seed": ("INT", {"default": 42, "min": 0, "max": 0xffffffffffffffff}),
                     "steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
                     "cfg": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step":0.1, "round": 0.01}),
                     "sampler_name": (comfy.samplers.KSampler.SAMPLERS, ),
@@ -166,9 +166,9 @@ class GSLatent:
     @classmethod
     def INPUT_TYPES(s):
         return {"required": {
-            "use_seed": ("INT", {"default": 0, "min": 0, "max": 1}),
-            "seed": ("INT", {"default": 42, "min": 0, "max": 0xffffffffffffffff}),
-            "set64bit": ("INT", {"default": 0, "min": 0, "max": 1}),
+            "use_seed": ("INT", {"default": 1, "min": 0, "max": 1}),
+            "seed": ("INT", {"default": 42, "min": 0, "max": 0xffffffff}),
+            "set64bit": ("INT", {"default": 1, "min": 0, "max": 1}),
             "width": ("INT", {"default": 512, "min": 64, "max": MAX_RESOLUTION, "step": 8}),
             "height": ("INT", {"default": 512, "min": 64, "max": MAX_RESOLUTION, "step": 8}),
             "key": ("STRING", {"default": "5822ff9cce6772f714192f43863f6bad1bf54b78326973897e6b66c3186b77a7"}),
@@ -182,9 +182,9 @@ class GSLatent:
     CATEGORY = "GSWatermark-lthero/latent/noise"
 
     
-    def create_gs_latents(self, key,nonce,message, batch_size,use_seed,seed,width,height,use_repeat):
+    def create_gs_latents(self, key,nonce,message, batch_size,use_seed,seed,width,height,set64bit):
         device = "cpu"
-        Z_s_T_arrays = [gs_watermark_init_noise(key,nonce,device,message,use_seed,seed,use_repeat) for _ in range(batch_size)]
+        Z_s_T_arrays = [gs_watermark_init_noise(key,nonce,device,message,use_seed,seed,set64bit) for _ in range(batch_size)]
         latent = torch.stack([Z_s_T_array.clone().detach().to(device).float() for Z_s_T_array in Z_s_T_arrays])
 
         return ({"samples": latent},latent[0])
