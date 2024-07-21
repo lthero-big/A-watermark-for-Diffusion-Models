@@ -23,6 +23,93 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "co
 
 MAX_RESOLUTION=8192
 
+def choose_watermark_length(total_blocks_needed):
+    if total_blocks_needed >= 1024 * 32:
+        return 1024
+    if total_blocks_needed >= 512 * 32:
+        return 512
+    if total_blocks_needed >= 256 * 32:
+        return 256
+    elif total_blocks_needed >= 128 * 32:
+        return 128
+    elif total_blocks_needed >= 64 * 32:
+        return 64
+    else:
+        return 32
+
+def gs_watermark_init_noise2(key_hex, nonce_hex, device, message, use_seed, randomSeed, width, height):
+    if int(use_seed) == 1:
+        rng = np.random.RandomState(seed=randomSeed)
+    
+    # Calculate initial noise vector dimensions
+    width_blocks = width // 8
+    height_blocks = height // 8
+    total_blocks_needed = 4 * width_blocks * height_blocks  # Total blocks needed
+
+    # Choose watermark length based on the total blocks needed
+    watermark_length_bits = choose_watermark_length(total_blocks_needed)
+    # print(watermark_length_bits)
+    LengthOfMessage_bytes = watermark_length_bits // 8
+
+    if message:
+        message_bytes = str(message).encode()
+        if len(message_bytes) < LengthOfMessage_bytes:
+            padded_message = message_bytes + b'\x00' * (LengthOfMessage_bytes - len(message_bytes))
+        else:
+            padded_message = message_bytes[:LengthOfMessage_bytes]
+        k = padded_message
+    else:
+        k = os.urandom(LengthOfMessage_bytes)
+
+    # Calculate the number of repeats needed
+    repeats = total_blocks_needed // watermark_length_bits  # Ensure we round down
+    print("="*20)
+
+    print(f"k {k}\nwatermark_length_bits {watermark_length_bits}\nrepeats {repeats}")
+
+    s_d = k * repeats
+    # print(s_d)
+    print("="*20)
+
+    if key_hex and nonce_hex:
+        key = bytes.fromhex(key_hex)
+        nonce = bytes.fromhex(nonce_hex)
+    elif key_hex and not nonce_hex:
+        key = bytes.fromhex(key_hex)
+        nonce_hex = key_hex[16:48]
+        nonce = bytes.fromhex(nonce_hex)
+    else:
+        key = os.urandom(32)
+        nonce = os.urandom(16)
+
+    cipher = Cipher(algorithms.ChaCha20(key, nonce), mode=None, backend=default_backend())
+    encryptor = cipher.encryptor()
+    m = encryptor.update(s_d) + encryptor.finalize()
+    m_bits = ''.join(format(byte, '08b') for byte in m)
+
+    l = 1
+    index = 0
+    Z_s_T_array = torch.zeros((4, height_blocks, width_blocks), dtype=torch.float32, device=device).cpu()
+
+    for i in range(0, len(m_bits), l):
+        window = m_bits[i:i + l]
+        y = int(window, 2)
+
+        if use_seed == 0:
+            u = np.random.uniform(0, 1)
+        else:
+            u = rng.uniform(0, 1)
+        z_s_T = norm.ppf((u + y) / 2**l)
+        Z_s_T_array[index // (height_blocks * width_blocks), (index // width_blocks) % height_blocks, index % width_blocks] = z_s_T.item()
+        index += 1
+
+        if index >= 4 * height_blocks * width_blocks:
+            break  # Ensure we don't exceed the array size
+    else:
+        print('Z_s_T_array is got normaly')
+        print("="*20,f"Z_s_T_array.shape {Z_s_T_array.shape}","="*20)
+    
+    return Z_s_T_array
 
 def gs_watermark_init_noise(key_hex, nonce_hex, device,message,use_seed,randomSeed,set64bit):
     if int(use_seed)==1:
@@ -182,8 +269,13 @@ class GSLatent:
 
     
     def create_gs_latents(self, key,nonce,message, batch_size,use_seed,seed,width,height,set64bit):
+        
         device = "cpu"
-        Z_s_T_arrays = [gs_watermark_init_noise(key,nonce,device,message,use_seed,seed,set64bit) for _ in range(batch_size)]
+        # 512*512
+        # Z_s_T_arrays = [gs_watermark_init_noise(key,nonce,device,message,use_seed,seed,set64bit) for _ in range(batch_size)]
+
+        # any size
+        Z_s_T_arrays = [gs_watermark_init_noise2(key,nonce,device,message,use_seed,seed,width=width,height=height) for _ in range(batch_size)]
         latent = torch.stack([Z_s_T_array.clone().detach().to(device).float() for Z_s_T_array in Z_s_T_arrays])
 
         return ({"samples": latent},latent[0])
