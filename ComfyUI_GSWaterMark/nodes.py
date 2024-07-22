@@ -24,17 +24,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "co
 MAX_RESOLUTION=8192
 
 def choose_watermark_length(total_blocks_needed):
-    # Maxium bit 65,536
-    # if total_blocks_needed >= 32768 * 2:
-    #     return 32768
-    # if total_blocks_needed >= 16384 * 4:
-    #     return 16384
-    # if total_blocks_needed >= 8192 * 8:
-    #     return 8192
-    # if total_blocks_needed >= 4096 * 16:
-    #     return 4096
-    # if total_blocks_needed >= 2048 * 32:
-    #     return 2048
     if total_blocks_needed >= 1024 * 32:
         return 1024
     if total_blocks_needed >= 512 * 32:
@@ -58,7 +47,7 @@ def gs_watermark_init_noise(key_hex, nonce_hex, device, message, use_seed, rando
     total_blocks_needed = 4 * width_blocks * height_blocks  
 
     # Choose watermark length based on the total blocks needed
-    if message_length ==-1:
+    if message_length !=-1:
         watermark_length_bits=message_length
     else:
         watermark_length_bits = choose_watermark_length(total_blocks_needed)
@@ -123,11 +112,8 @@ def gs_watermark_init_noise(key_hex, nonce_hex, device, message, use_seed, rando
         index += 1
 
         if index >= 4 * height_blocks * width_blocks:
-            break  # Ensure we don't exceed the array size
-    else:
-        print('Z_s_T_array is got normaly')
-        print("="*20,f"Z_s_T_array.shape {Z_s_T_array.shape}","="*20)
-    
+            break  
+
     return Z_s_T_array
 
 
@@ -221,12 +207,7 @@ class GSLatent:
 
     
     def create_gs_latents(self, key,nonce,message, batch_size,use_seed,seed,width,height,message_length):
-
         device = "cpu"
-        # 512*512
-        # Z_s_T_arrays = [gs_watermark_init_noise(key,nonce,device,message,use_seed,seed,set64bit) for _ in range(batch_size)]
-
-        # any size
         Z_s_T_arrays = [gs_watermark_init_noise(key,nonce,device,message,use_seed,seed,width=width,height=height,message_length=message_length) for _ in range(batch_size)]
         latent = torch.stack([Z_s_T_array.clone().detach().to(device).float() for Z_s_T_array in Z_s_T_arrays])
 
