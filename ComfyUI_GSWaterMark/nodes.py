@@ -24,6 +24,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "co
 MAX_RESOLUTION=8192
 
 def choose_watermark_length(total_blocks_needed):
+    # Maxium bit 65,536
+    # if total_blocks_needed >= 32768 * 2:
+    #     return 32768
+    # if total_blocks_needed >= 16384 * 4:
+    #     return 16384
+    # if total_blocks_needed >= 8192 * 8:
+    #     return 8192
+    # if total_blocks_needed >= 4096 * 16:
+    #     return 4096
+    # if total_blocks_needed >= 2048 * 32:
+    #     return 2048
     if total_blocks_needed >= 1024 * 32:
         return 1024
     if total_blocks_needed >= 512 * 32:
@@ -66,9 +77,7 @@ def gs_watermark_init_noise(key_hex, nonce_hex, device, message, use_seed, rando
 
     # Calculate the number of repeats needed
     repeats = total_blocks_needed // watermark_length_bits  
-    print("="*20)
-    
-    print(f"k {k}\nwatermark_length_bits {watermark_length_bits}\nrepeats {repeats}")
+    # print(f"k {k}\nwatermark_length_bits {watermark_length_bits}\nrepeats {repeats}")
 
     s_d = k * repeats
 
@@ -77,7 +86,6 @@ def gs_watermark_init_noise(key_hex, nonce_hex, device, message, use_seed, rando
     if remaining_bits > 0:
         s_d += b'\x00' * (remaining_bits // 8)
     # print(s_d)
-    print("="*20)
 
     if key_hex and nonce_hex:
         key = bytes.fromhex(key_hex)
@@ -113,6 +121,19 @@ def gs_watermark_init_noise(key_hex, nonce_hex, device, message, use_seed, rando
 
         if index >= 4 * height_blocks * width_blocks:
             break  
+    
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(f'info_data.txt', 'a') as f:
+        f.write(f"Time: {current_time}\n")
+        f.write(f'key: {key.hex()}\n')
+        f.write(f'nonce: {nonce.hex()}\n')
+        f.write(f'message: {k.hex()}\n')
+        f.write(f'randomSeed: {randomSeed}\n')
+        f.write(f'height: {height}\n')
+        f.write(f'width: {width}\n')
+        f.write(f'randomSeed: {randomSeed}\n')
+        f.write(f'message_length: {message_length}\n')
+        f.write(f'----------------------\n')
 
     return Z_s_T_array
 
@@ -208,7 +229,12 @@ class GSLatent:
     
     def create_gs_latents(self, key,nonce,message, batch_size,use_seed,seed,width,height,message_length):
         device = "cpu"
-        Z_s_T_arrays = [gs_watermark_init_noise(key,nonce,device,message,use_seed,seed,width=width,height=height,message_length=message_length) for _ in range(batch_size)]
+        if use_seed==1:
+            Z_s_T_array = gs_watermark_init_noise(key, nonce, device, message, use_seed, seed, width=width, height=height, message_length=message_length)
+            # Duplicate Z_s_T_array batch_size times
+            Z_s_T_arrays = torch.stack([Z_s_T_array for _ in range(batch_size)])
+        else:
+            Z_s_T_arrays = [gs_watermark_init_noise(key,nonce,device,message,use_seed,seed,width=width,height=height,message_length=message_length) for _ in range(batch_size)]
         latent = torch.stack([Z_s_T_array.clone().detach().to(device).float() for Z_s_T_array in Z_s_T_arrays])
 
         return ({"samples": latent},latent[0])
